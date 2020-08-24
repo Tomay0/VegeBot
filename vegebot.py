@@ -1,7 +1,7 @@
 import discord
 import random
 from discord import FFmpegPCMAudio
-import pyttsx3
+from gtts import gTTS
 
 from datetime import timedelta, datetime
 
@@ -41,12 +41,10 @@ greetings = [
     "Oh hi {name}, we were just shit-talking you"
 ]
 
-
 text_channels = []
 voice_channels = []
 
 vc = None
-tts_engine = pyttsx3.init()
 
 play_queue = []
 playing = False
@@ -80,8 +78,9 @@ def next_in_queue(error):
 
     text = play_queue.pop(0)
 
-    tts_engine.save_to_file(text, 'vege.wav')
-    tts_engine.runAndWait()
+    voice_text = gTTS(text=text, lang='en', slow=False)
+
+    voice_text.save("vege.wav")
 
     audio_source = FFmpegPCMAudio('vege.wav')
 
