@@ -88,7 +88,7 @@ async def on_voice_state_update(member, before, after):
     global vc, playing
 
     if after is not None and vc is not None:
-        if before.channel is None and after.channel.id == vc.channel.id:
+        if after.channel.id == vc.channel.id:
             greeting = random.choice(greetings)
             say(greeting.format(name=member.display_name))
 
