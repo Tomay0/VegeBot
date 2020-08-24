@@ -1,18 +1,17 @@
 import discord
-
 from discord import FFmpegPCMAudio
-
 from gtts import gTTS
+from datetime import timedelta, datetime
 
 client = discord.Client()
-
-text_channels = []
-voice_channels = []
 
 vc = None
 
 play_queue = []
 playing = False
+
+deleted_messages = []
+edited_messages = []
 
 
 def next_in_queue(error):
@@ -36,23 +35,6 @@ def next_in_queue(error):
         return
 
     vc.play(audio_source, after=next_in_queue)
-
-
-@client.event
-async def on_ready():
-    print("Bot is ready")
-
-    for guild in client.guilds:
-        for channel in guild.text_channels:
-            text_channels.append(channel)
-        for channel in guild.voice_channels:
-            voice_channels.append(channel)
-
-    for channel in text_channels:
-        # TODO make this configurable
-        if channel.name == "voice-chat":
-            await channel.send("OH MY GOD IM SO READY")
-
 
 @client.event
 async def on_message(message):
@@ -81,43 +63,59 @@ async def on_message(message):
                 next_in_queue(None)
         else:
             await message.channel.send("I'm not in a voice channel. Join a voice channel and type \"vege come here\"")
+    elif message.content.lower() == "vege delete history":
+        filter(lambda x: (x.created_at - datetime.now()).minutes < 15, deleted_messages)
+        for i in deleted_messages:
+            if i.channel != message.channel:
+                continue
+            
+            await message.channel.send(i.author.mention + ", deleted:\n" + i.content)
+
+            for attachment in i.attachments:
+                try:
+                    file = await attachment.to_file(use_cached=True)
+
+                    await message.channel.send(file=file)
+                except discord.errors.NotFound:
+                    print("Could not post deleted image")
+    elif message.content.lower() == "vege edit history":
+        filter(lambda x: (x.created_at - datetime.now()).minutes < 15, edited_messages)
+        for i in edited_messages:
+            if i.channel != message.channel:
+                continue
+            
+            await message.channel.send(i.author.mention + ", edited:\n" + i.content)
+
+            for attachment in i.attachments:
+                try:
+                    file = await attachment.to_file(use_cached=True)
+
+                    await message.channel.send(file=file)
+                except discord.errors.NotFound:
+                    print("Could not post image")
+    elif message.content.lower().startswith("vege"):
+        await message.channel.send("That is not a command")
+    elif message.content.lower().startswith("vegy"):
+        await message.channel.send("My name is vege not vegy you stupid fuck")
+        
 
 
 @client.event
 async def on_message_delete(message):
     if message.author.id == 746605769641951313:
         return
-
-    await message.channel.send(
-        "Hey " + message.author.mention + ", here's your deleted message:\n" + message.content)
-
-    for attachment in message.attachments:
-        try:
-            file = await attachment.to_file(use_cached=True)
-
-            await message.channel.send(file=file)
-        except discord.errors.NotFound:
-            print("Could not post deleted image")
+    
+    deleted_messages.append(message)
 
 
 @client.event
 async def on_message_edit(before, after):
-    await before.channel.send(
-        "Hey " + before.author.mention + ", here is the message before it was edited:\n" + before.content)
-
-    for attachment in before.attachments:
-        try:
-            file = await attachment.to_file(use_cached=True)
-
-            await before.channel.send(file=file)
-        except discord.errors.NotFound:
-            print("Could not post deleted image")
+    edited_messages.append(message)
 
 
 # Read bot token
 # Create a token.txt with your own token if you want to use this bot
-token_file = open("token.txt", "r")
 
-client.run(token_file.read())
+with open("token.txt", "r") as token_file:
+    client.run(token_file.read())
 
-token_file.close()
