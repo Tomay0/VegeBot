@@ -26,7 +26,16 @@ greetings = [
     "Everyone move to the other channel, {name} has joined",
     "Oh no, everyone mute {name}",
     "Everyone kink shame {name}",
-    "Sad peepos in the chat, {name} is here"
+    "Sad peepos in the chat, {name} is here",
+    "Somone call The Undateables, {name} is here",
+    "Somone call Bum Fights, {name} is here",
+    "speaking of unfuckable, {name} is here",
+    "fuck me sideways and call me {name}",
+    "Oh no, look who decided to show up. It's {name}",
+    "Time to open up the Cum Zone, {name} is here",
+    "dicks out for {name}",
+    "Wussup {name}",
+    "How to mute {name} on discord. Wait this isn't google"
 ]
 
 
@@ -155,9 +164,9 @@ async def on_message(message):
                     await message.channel.send(file=file)
                 except discord.errors.NotFound:
                     print("Could not post image")
-    elif message.content.lower().startswith("vege"):
+    elif message.content.lower().startswith("vege "):
         await message.channel.send("That is not a command")
-    elif message.content.lower().startswith("vegy"):
+    elif message.content.lower().startswith("vegy "):
         await message.channel.send("My name is vege not vegy you stupid fuck")
 
 
