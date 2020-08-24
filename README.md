@@ -1,6 +1,6 @@
 # How to run
 
-Make sure ffmpeg, python and pip are installed.
+Make sure ffmpeg, espeak, python and pip are installed.
 
 Add your discord token into project root folder. Call it ```token.txt```
 
@@ -10,7 +10,7 @@ Then open the terminal at the project root folder and do the following:
 sudo pip install virtualenv
 virtualenv vegebot
 source vegebot/bin/activate
-pip install discord gTTS pynacl
+pip install discord pyttsx3 pynacl
 python vegebot.py
 ```
 
