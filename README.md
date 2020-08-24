@@ -1,8 +1,8 @@
 # How to run
 
-Make sure ffmpeg, espeak, python and pip are installed.
+Make sure ffmpeg, python and pip are installed.
 
-Add your discord token into project root folder. Call it ```token.txt```
+Add your discord bot's token into project root folder. Call it ```token.txt```
 
 Then open the terminal at the project root folder and do the following:
 
