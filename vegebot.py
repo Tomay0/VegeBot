@@ -45,14 +45,15 @@ greetings = [
     "Hello {name}, we have awaited your arrival",
     "Hello Name, here's your complimentary smoothie",
     "Welcome {name}. The average IQ here just doubled",
-    "{name} is here. They wants their fucking hugs",
+    "{name} is here. They want their fucking hugs",
     "Hi {name}, good to see you",
     "Heyyyy {name}, nice cock",
     "{name}'s ripe this time of year",
     "Gurgle guzzle aaaaa, I'm drowning in {name}'s cum",
     "The king of skux has arived. All hail the omnipotent {name}",
     "It's my birthday and {name} is here as my present",
-    "Hey {name}, time for your pegging"
+    "Hey {name}, time for your daily pegging",
+    "uwu notices {name}. Someones happy"
 ]
 
 text_channels = []
