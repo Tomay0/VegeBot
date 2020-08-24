@@ -35,7 +35,10 @@ greetings = [
     "Time to open up the Cum Zone, {name} is here",
     "dicks out for {name}",
     "Wussup {name}",
-    "How to mute {name} on discord. Wait this isn't google"
+    "How to mute {name} on discord. Wait this isn't google",
+    "Police? Yep. {name} is here. We'll keep them occupied",
+    "hide your children its {name}",
+    "Oh hi {name}, we were just shit-talking you"
 ]
 
 
