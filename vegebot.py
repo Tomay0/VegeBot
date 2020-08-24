@@ -80,10 +80,10 @@ def next_in_queue(error):
 
     text = play_queue.pop(0)
 
-    tts_engine.save_to_file(text, 'vege.mp3')
+    tts_engine.save_to_file(text, 'vege.wav')
     tts_engine.runAndWait()
 
-    audio_source = FFmpegPCMAudio('vege.mp3')
+    audio_source = FFmpegPCMAudio('vege.wav')
 
     if vc is None:
         playing = False
