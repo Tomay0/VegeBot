@@ -1,5 +1,6 @@
 import discord
 import random
+import os
 from discord import FFmpegPCMAudio
 from gtts import gTTS
 
@@ -48,6 +49,7 @@ vc = None
 
 play_queue = []
 playing = False
+play_id = 0
 
 deleted_messages = []
 edited_messages = []
@@ -69,37 +71,51 @@ async def on_ready():
             await channel.send("OH MY GOD IM SO READY")
 
 
-def next_in_queue(error):
+def next_in_queue(error=None, file_name=None):
     global playing, play_queue
+
+    print("Finished playing")
+
+    if file_name is not None:
+        os.remove(file_name)
 
     if len(play_queue) == 0:
         playing = False
         return
 
-    text = play_queue.pop(0)
-
-    voice_text = gTTS(text=text, lang='en', slow=False)
-
-    voice_text.save("vege.wav")
-
-    audio_source = FFmpegPCMAudio('vege.wav')
+    file_name = play_queue.pop(0)
+    audio_source = FFmpegPCMAudio(file_name)
 
     if vc is None:
         playing = False
         play_queue.clear()
+
+        for file in os.listdir("audio"):
+            os.remove("audio/" + file)
+
         return
 
-    vc.play(audio_source, after=next_in_queue)
+    vc.play(audio_source, after=lambda x: next_in_queue(x, file_name))
 
 
 def say(text):
-    global playing
+    global playing, play_id
 
-    play_queue.append(text)
+    voice_text = gTTS(text=text, lang='en', slow=False)
+
+    if not os.path.exists("audio"):
+        os.mkdir("audio")
+
+    file_name = "audio/" + str(play_id) + ".wav"
+
+    play_id = (play_id + 1) % 100000
+
+    voice_text.save(file_name)
+    play_queue.append(file_name)
 
     if not playing:
         playing = True
-        next_in_queue(None)
+        next_in_queue()
 
 
 @client.event
