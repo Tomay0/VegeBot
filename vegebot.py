@@ -1,7 +1,8 @@
 import discord
 import random
 from discord import FFmpegPCMAudio
-from gtts import gTTS
+import pyttsx3
+
 from datetime import timedelta, datetime
 
 client = discord.Client()
@@ -23,8 +24,9 @@ greetings = [
     "{name} is looking like an art hoe today",
     "Everyone give {name} a vibe check",
     "Everyone move to the other channel, {name} has joined",
-    "Oh no everyone mute {name}",
-    "Everyone kink shame {name}"
+    "Oh no, everyone mute {name}",
+    "Everyone kink shame {name}",
+    "Sad peepos in the chat, {name} is here"
 ]
 
 
@@ -32,6 +34,7 @@ text_channels = []
 voice_channels = []
 
 vc = None
+tts_engine = pyttsx3.init()
 
 play_queue = []
 playing = False
@@ -65,9 +68,8 @@ def next_in_queue(error):
 
     text = play_queue.pop(0)
 
-    voice_text = gTTS(text=text, lang='en', slow=False)
-
-    voice_text.save("vege.mp3")
+    tts_engine.save_to_file(text, 'vege.mp3')
+    tts_engine.runAndWait()
 
     audio_source = FFmpegPCMAudio('vege.mp3')
 
