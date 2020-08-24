@@ -18,7 +18,13 @@ greetings = [
     "I was having a great day until {name} joined",
     "Hi Tyler. Oh sorry, I mean {name}",
     "Who just joined? Oh it's {name}",
-    "A cutie named {name} just joined"
+    "A cutie named {name} just joined",
+    "I hope everyone has a good day except {name}",
+    "{name} is looking like an art hoe today",
+    "Everyone give {name} a vibe check",
+    "Everyone move to the other channel, {name} has joined",
+    "Oh no everyone mute {name}",
+    "Everyone kink shame {name}"
 ]
 
 
@@ -88,7 +94,7 @@ async def on_voice_state_update(member, before, after):
     global vc, playing
 
     if after is not None and vc is not None:
-        if after.channel.id == vc.channel.id:
+        if before.channel != after.channel and after.channel == vc.channel:
             greeting = random.choice(greetings)
             say(greeting.format(name=member.display_name))
 
