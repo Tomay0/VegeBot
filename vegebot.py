@@ -8,56 +8,8 @@ from datetime import timedelta, datetime
 
 client = discord.Client()
 
-greetings = [
-    "Watch out everyone it is {name}",
-    "Hello, {name}",
-    "Lol fuck off {name}",
-    "Party's over, {name} has joined",
-    "Hi, {name}. I love you",
-    "Ayyy it's {name}, hello",
-    "Hoodle",
-    "Welcome to voice chat, {name}",
-    "I was having a great day until {name} joined",
-    "Hi Tyler. Oh sorry, I mean {name}",
-    "Who just joined? Oh it's {name}",
-    "A cutie named {name} just joined",
-    "I hope everyone has a good day except {name}",
-    "{name} is looking like an art hoe today",
-    "Everyone give {name} a vibe check",
-    "Everyone move to the other channel, {name} has joined",
-    "Oh no, everyone mute {name}",
-    "Everyone kink shame {name}",
-    "Sad peepos in the chat, {name} is here",
-    "Somone call The Undateables, {name} is here",
-    "Somone call Bum Fights, {name} is here",
-    "Speaking of unfuckable, {name} is here",
-    "Fuck me sideways and call me {name}",
-    "Oh no, look who decided to show up. It's {name}",
-    "Time to open up the Cum Zone, {name} is here",
-    "Dicks out for {name}",
-    "Wussup {name}",
-    "How to mute {name} on discord. Wait this isn't google",
-    "Police? Yep. {name} is here. We'll keep them occupied",
-    "Hide your children its {name}",
-    "Oh hi {name}, we were just shit-talking you",
-    "{name} is a national hero and should be treasured",
-    "All hail {name}, our supreme leader",
-    "Hello {name}, we have awaited your arrival",
-    "Hello Name, here's your complimentary smoothie",
-    "Welcome {name}. The average IQ here just doubled",
-    "{name} is here. They want their fucking hugs",
-    "Hi {name}, good to see you",
-    "Heyyyy {name}, nice cock",
-    "{name}'s ripe this time of year",
-    "Gurgle guzzle aaaaa, I'm drowning in {name}'s cum",
-    "The king of skux has arived. All hail the omnipotent {name}",
-    "It's my birthday and {name} is here as my present",
-    "Hey {name}, time for your daily pegging",
-    "uwu notices {name}. Someones happy"
-]
-
-text_channels = []
-voice_channels = []
+with open("greetings.txt", "r") as greetings_file:
+    greetings = greetings_file.readlines()
 
 vc = None
 
@@ -75,14 +27,9 @@ async def on_ready():
 
     for guild in client.guilds:
         for channel in guild.text_channels:
-            text_channels.append(channel)
-        for channel in guild.voice_channels:
-            voice_channels.append(channel)
-
-    for channel in text_channels:
-        # TODO make this configurable
-        if channel.name == "voice-chat":
-            await channel.send("OH MY GOD IM SO READY")
+            if channel.name == "voice-chat":
+                await channel.send("OH MY GOD IM SO READY")
+                break
 
 
 def next_in_queue(error=None, file_name=None):
