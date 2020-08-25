@@ -32,7 +32,7 @@ Oh hi {name}, we were just shit-talking you
 {name} is a national hero and should be treasured
 All hail {name}, our supreme leader
 Hello {name}, we have awaited your arrival
-Hello Name, here's your complimentary smoothie
+Hello {name}, here's your complimentary smoothie
 Welcome {name}. The average IQ here just doubled
 {name} is here. They want their fucking hugs
 Hi {name}, good to see you
