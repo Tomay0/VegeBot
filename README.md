@@ -10,7 +10,7 @@ Then open the terminal at the project root folder and do the following:
 sudo pip install virtualenv
 virtualenv vegebot
 source vegebot/bin/activate
-pip install discord pyttsx3 pynacl
+pip install discord gtts pynacl
 python vegebot.py
 ```
 
