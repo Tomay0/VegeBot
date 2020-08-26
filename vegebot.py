@@ -15,7 +15,7 @@ PREFIX = 'vege '
 client = discord.Client()
 
 with open('greetings.txt') as greetings_file:
-    greetings = greetings_file.readlines()
+    GREETINGS = greetings_file.readlines()
 
 commands = []
 
@@ -27,8 +27,14 @@ def command(name, description):
     return add_command
 
 
-vc = None
+class PlayItem:
+    def __init__(self, file_name, delete_after=False):
+        self.filename = file_name
+        self.audio_source = FFmpegPCMAudio(file_name)
+        self.delete_after = delete_after
 
+
+vc = None
 play_queue = []
 playing = False
 play_id = 0
@@ -48,29 +54,24 @@ async def on_ready():
                 break
 
 
-def next_in_queue(error=None, file_name=None):
+def next_in_queue():
     global playing, play_queue
 
-    if file_name is not None:
-        os.remove(file_name)
+    if vc is None:
+        playing = False
+        for i in play_queue:
+            if i.delete_after is True:
+                os.remove(i.file_name)
+        play_queue.clear()
+        return
 
     if len(play_queue) == 0:
         playing = False
         return
 
-    file_name = play_queue.pop(0)
-    audio_source = FFmpegPCMAudio(file_name)
+    play_item = play_queue.pop(0)
 
-    if vc is None:
-        playing = False
-        play_queue.clear()
-
-        for file in os.listdir('audio'):
-            os.remove('audio/' + file)
-
-        return
-
-    vc.play(audio_source, after=lambda x: next_in_queue(x, file_name))
+    vc.play(play_item.audio_source, after=lambda x: next_in_queue())
 
 
 def generate_tts(text):
@@ -86,7 +87,8 @@ def generate_tts(text):
     play_id = (play_id + 1) % 100000
 
     voice_text.save(file_name)
-    play_queue.append(file_name)
+
+    play_queue.append(PlayItem(file_name, delete_after=True))
 
     if not playing:
         playing = True
@@ -189,7 +191,7 @@ async def help_command(message, args):
 @command('tick', 'Plays a random Min tick')
 async def help_command(message, args):
     global playing
-    play_queue.append(random.choice(TICK_FILES))
+    play_queue.append(PlayItem(random.choice(TICK_FILES)))
 
     if not playing:
         playing = True
@@ -217,7 +219,7 @@ async def on_voice_state_update(member, before, after):
 
     if after is not None and vc is not None:
         if before.channel != after.channel and after.channel == vc.channel:
-            greeting = random.choice(greetings)
+            greeting = random.choice(GREETINGS)
             generate_tts(greeting.format(name=member.display_name))
 
 
