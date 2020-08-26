@@ -9,7 +9,7 @@ from os import listdir
 from os.path import isfile, join
 
 TICK_PATH = 'ticks/'
-TICK_FILES = [f for f in listdir(TICK_PATH) if isfile(join(TICK_PATH, f))]
+TICK_FILES = [TICK_PATH + f for f in listdir(TICK_PATH) if isfile(join(TICK_PATH, f))]
 PREFIX = 'vege '
 
 client = discord.Client()
