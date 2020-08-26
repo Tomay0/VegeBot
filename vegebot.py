@@ -5,8 +5,11 @@ from discord import FFmpegPCMAudio
 from gtts import gTTS
 from datetime import timedelta, datetime
 from sys import argv
+from os import listdir
+from os.path import isfile, join
 
-
+TICK_PATH = 'ticks/'
+TICK_FILES = [f for f in listdir(TICK_PATH) if isfile(join(TICK_PATH, f))]
 PREFIX = 'vege '
 
 client = discord.Client()
@@ -14,12 +17,13 @@ client = discord.Client()
 with open('greetings.txt') as greetings_file:
     greetings = greetings_file.readlines()
 
-commands = {}
+commands = []
 
 
-def command(name):
-    def add_command(func):
-        commands[name] = func
+def command(name, description):
+    def add_command(function):
+        global commands
+        commands.append({'function': function, 'name': name, 'description': description})
     return add_command
 
 
@@ -89,7 +93,7 @@ def generate_tts(text):
         next_in_queue()
 
 
-@command('say')
+@command('say', 'When the bot is in a voice channel it will use text to speech to read your message aloud')
 async def say(message, args):
     if vc is None:
         await message.channel.send('Can\'t. I\'m not in a voice channel')
@@ -99,7 +103,7 @@ async def say(message, args):
         generate_tts(args)
 
 
-@command('come here')
+@command('come here', 'Will make the bot join the voice channel you are in')
 async def join_vc(message, args):
     global vc
     voice_state = message.author.voice
@@ -116,7 +120,7 @@ async def join_vc(message, args):
     vc = await voice_channel.connect()
 
 
-@command('go away')
+@command('go away', 'Makes the bot leave the voice channel')
 async def leave_vc(message, args):
     global vc
     if vc is None:
@@ -126,7 +130,7 @@ async def leave_vc(message, args):
     vc = None
 
 
-@command('delete history')
+@command('delete history', 'Shows all the messages that have been deleted in this channel in the last 15 minutes')
 async def show_history(message, args):
     global deleted_messages
     deleted_messages = [m for m in deleted_messages if (datetime.utcnow() - m.created_at).seconds < 15 * 60]
@@ -150,7 +154,7 @@ async def show_history(message, args):
                 print('Could not post deleted image')
 
 
-@command('edit history')
+@command('edit history', 'Shows all the messages that have been edited in this channel in the last 15 minutes')
 async def show_history(message, args):
     global edited_messages
     edited_messages = [m for m in edited_messages if (datetime.utcnow() - m.created_at).seconds < 15 * 60]
@@ -174,6 +178,24 @@ async def show_history(message, args):
                 print('Could not post deleted image')
 
 
+@command('help', 'Shows you a list of all the commands you can use and a description of how to use them')
+async def help_command(message, args):
+    response = 'These are all the commands you can use: \n'
+    for i in commands:
+        response += '\tvege {name}:\t {description}\n'.format(**i)
+    await message.channel.send(response)
+
+
+@command('tick', 'Plays a random Min tick')
+async def help_command(message, args):
+    global playing
+    play_queue.append(random.choice(TICK_FILES))
+
+    if not playing:
+        playing = True
+        next_in_queue()
+
+
 @client.event
 async def on_message(message):
     text = message.content.lower()
@@ -181,9 +203,9 @@ async def on_message(message):
         return
     text = text[len(PREFIX):]
 
-    for name, func in commands.items():
-        if text.startswith(name):
-            await func(message, message.content[len(PREFIX) + len(name) + 1:])  # +1 for space
+    for i in commands:
+        if text.startswith(i['name']):
+            await i['function'](message, message.content[len(PREFIX) + len(i['name']) + 1:])  # +1 for space
             break
     else:
         await message.channel.send('That is not a command')
@@ -201,7 +223,7 @@ async def on_voice_state_update(member, before, after):
 
 @client.event
 async def on_message_delete(message):
-    if message.author.id == 746605769641951313:
+    if message.author.id == client.user.id:
         return
 
     deleted_messages.append(message)
