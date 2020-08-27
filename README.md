@@ -18,6 +18,7 @@ python vegebot.py
 
 # Command
 
+```
 vege say                           When the bot is in a voice channel it will use text to speech to read your message aloud
 vege come here                     Will make the bot join the voice channel you are in
 vege go away                       Makes the bot leave the voice channel
@@ -26,3 +27,4 @@ vege edit history                  Shows all the messages that have been edited 
 vege colour me                     Colours your name the requested colour. You can give it hex, RGB values or the name of the colour you want
 vege tick                          Plays a random Min tick
 vege help                          Shows you a list of all the commands you can use and a description of how to use them
+```
