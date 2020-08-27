@@ -3,10 +3,12 @@ import random
 import os
 from discord import FFmpegPCMAudio
 from gtts import gTTS
-from datetime import timedelta, datetime
+from datetime import datetime
 from sys import argv
 from os import listdir
 from os.path import isfile, join
+import webcolors
+import functools
 
 TICK_PATH = 'ticks/'
 TICK_FILES = [TICK_PATH + f for f in listdir(TICK_PATH) if isfile(join(TICK_PATH, f))]
@@ -20,10 +22,10 @@ with open('greetings.txt') as greetings_file:
 commands = []
 
 
-def command(name, description):
+def command(name, description, show_in_help=True):
     def add_command(function):
         global commands
-        commands.append({'function': function, 'name': name, 'description': description})
+        commands.append({'function': function, 'name': name, 'description': description, 'show in help': show_in_help})
     return add_command
 
 
@@ -34,7 +36,7 @@ class PlayItem:
         self.delete_after = delete_after
 
 
-vc = None
+vc = None  # TODO: Allow it to enter more than one voice chat for when its being used on more than one server
 play_queue = []
 playing = False
 play_id = 0
@@ -96,21 +98,23 @@ def generate_tts(text):
 
 
 @command('say', 'When the bot is in a voice channel it will use text to speech to read your message aloud')
-async def say(message, args):
+async def say_command(message, args):
     if vc is None:
         await message.channel.send('Can\'t. I\'m not in a voice channel')
     elif len(args) == 0:
-        await message.channel.send('You need to give me something to say. E.g "vege say fuck you Tyler"')
+        await message.channel.send('You need to give me something to say. E.g "vege say fuck you"')
     else:
         generate_tts(args)
 
 
 @command('come here', 'Will make the bot join the voice channel you are in')
-async def join_vc(message, args):
+async def join_vc_command(message, args):
     global vc
+
     voice_state = message.author.voice
 
     if voice_state is None:
+        await message.channel.send('You must be in a voice channel to send this.')
         return
 
     voice_channel = voice_state.channel
@@ -118,12 +122,15 @@ async def join_vc(message, args):
     if voice_channel is None:
         await message.channel.send('You must be in a voice channel to send this.')
         return
+    elif vc == voice_channel:
+        await message.channel.send('I\'m already in the voice channel')
+        return
 
     vc = await voice_channel.connect()
 
 
 @command('go away', 'Makes the bot leave the voice channel')
-async def leave_vc(message, args):
+async def leave_vc_command(message, args):
     global vc
     if vc is None:
         return
@@ -133,7 +140,7 @@ async def leave_vc(message, args):
 
 
 @command('delete history', 'Shows all the messages that have been deleted in this channel in the last 15 minutes')
-async def show_history(message, args):
+async def show_delete_history_command(message, args):
     global deleted_messages
     deleted_messages = [m for m in deleted_messages if (datetime.utcnow() - m.created_at).seconds < 15 * 60]
 
@@ -141,23 +148,30 @@ async def show_history(message, args):
         await message.channel.send('No messages have been deleted in the last 15 minutes')
         return
 
-    for i in deleted_messages:
-        if i.channel != message.channel:
+    for deleted_message in deleted_messages:
+        if deleted_message.channel != message.channel:
             continue
 
-        await message.channel.send(i.author.mention + ', deleted:\n' + i.content)
+        files = []
+        file_urls = []
 
-        for attachment in i.attachments:
+        for attachment in deleted_message.attachments:
             try:
-                file = await attachment.to_file(use_cached=True)
-
-                await message.channel.send(file=file)
+                files.append(await attachment.to_file(use_cached=True))
             except discord.errors.NotFound:
-                print('Could not post deleted image')
+                file_urls.append(attachment.url)
+
+        response = '{author}, deleted:\n {content}\n{file_urls}'
+        response = response.format(
+            author=deleted_message.author.mention,
+            content=deleted_message.content,
+            file_urls='\n'.join(file_urls)
+        )
+        await message.channel.send(response, files=files)
 
 
 @command('edit history', 'Shows all the messages that have been edited in this channel in the last 15 minutes')
-async def show_history(message, args):
+async def show_edit_history_command(message, args):
     global edited_messages
     edited_messages = [m for m in edited_messages if (datetime.utcnow() - m.created_at).seconds < 15 * 60]
 
@@ -165,37 +179,85 @@ async def show_history(message, args):
         await message.channel.send('No messages have been edited in the last 15 minutes')
         return
 
-    for i in edited_messages:
-        if i.channel != message.channel:
-            continue
+    for edited_message in edited_messages:
+        files = []
+        file_urls = []
 
-        await message.channel.send(i.author.mention + ', edited:\n' + i.content)
-
-        for attachment in i.attachments:
+        for attachment in edited_message.attachments:
             try:
-                file = await attachment.to_file(use_cached=True)
-
-                await message.channel.send(file=file)
+                files.append(await attachment.to_file(use_cached=True))
             except discord.errors.NotFound:
-                print('Could not post deleted image')
+                file_urls.append(attachment.url)
+
+        response = '{author}, deleted:\n {content}\n{file_urls}'
+        response = response.format(
+            author=edited_message.author.mention,
+            content=edited_message.content,
+            file_urls='\n'.join(file_urls)
+        )
+        await message.channel.send(response, files=files)
+
+
+@command('colour me', 'Colours your name the requested colour. You can give it hex, RGB values or the name of the colour you want')
+async def colour_command(message, args):
+    if len(args) == 0:
+        await message.channel.send('Please give me a colour. E.g. "vege colour me blue"')
+        return
+
+    if args.lower() in webcolors.CSS3_NAMES_TO_HEX:
+        hex_colour = webcolors.name_to_hex(args)
+    elif webcolors.HEX_COLOR_RE.match(args):
+        hex_colour = webcolors.normalize_hex(args)
+    else:
+        try:
+            hex_colour = webcolors.rgb_to_hex(map(int, args.split()))
+        except ValueError or TypeError:
+            await message.channel.send('That is not a vaild colour. E.g. "vege colour me blue"')
+            return
+
+    discord_color = discord.Color(int(hex_colour[1:], 16))
+
+    role_name = "colour-{}".format(message.author.id)
+
+    if role_name not in [i.name for i in message.guild.roles]:
+        role = await message.guild.create_role(name=role_name)
+        await message.author.add_roles(role)
+    else:
+        role = discord.utils.get(message.guild.roles, name=role_name)
+    await role.edit(colour=discord_color)
+    await message.channel.send('Done')
 
 
 @command('help', 'Shows you a list of all the commands you can use and a description of how to use them')
 async def help_command(message, args):
-    response = 'These are all the commands you can use: \n'
+    response = 'These are all the commands you can use: \n```'
     for i in commands:
-        response += '\tvege {name}:\t {description}\n'.format(**i)
+        if i['show in help']:
+            response += 'vege {name:<30}{description}\n'.format(**i)
+    response += '```'
     await message.channel.send(response)
 
 
 @command('tick', 'Plays a random Min tick')
-async def help_command(message, args):
+async def tick_command(message, args):
     global playing
+    if vc is None:
+        await message.channel.send('Can\'t. I\'m not in a voice channel')
+        return
+
     play_queue.append(PlayItem(random.choice(TICK_FILES)))
 
     if not playing:
         playing = True
         next_in_queue()
+
+
+@command('test greeting', 'Greets the person who writes this in discord', show_in_help=False)
+async def test_greeting_command(message, args):
+    if vc is None:
+        await message.channel.send('Can\'t. I\'m not in a voice channel')
+    else:
+        generate_tts(random.choice(GREETINGS).format(name=message.author.display_name))
 
 
 @client.event
@@ -206,7 +268,7 @@ async def on_message(message):
     text = text[len(PREFIX):]
 
     for i in commands:
-        if text.startswith(i['name']):
+        if text.startswith(i['name'] + ' ') or text == i['name']:
             await i['function'](message, message.content[len(PREFIX) + len(i['name']) + 1:])  # +1 for space
             break
     else:
