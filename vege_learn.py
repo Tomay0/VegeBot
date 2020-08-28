@@ -14,7 +14,7 @@ models = {}
 class Model:
     def __init__(self, name):
         self.name = name
-        self.dir = "immitate/" + name
+        self.dir = "imitate/" + name
         self.path = self.dir + "/data.txt"
         self.char_idx_file = self.dir + '/char_idx.pickle'
 
@@ -68,7 +68,7 @@ def has_user(name):
     return name in models
 
 
-def immitate_user(name):
+def imitate_user(name):
     model = models[name]
 
     seed = random_sequence_from_textfile(model.path, model.maxlen)

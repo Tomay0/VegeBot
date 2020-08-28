@@ -12,7 +12,7 @@ Then open the terminal at the project root folder and do the following:
 sudo pip install virtualenv
 virtualenv vegebot
 source vegebot/bin/activate
-pip install discord gtts pynacl webcolors tflearn tensorflow==1.14 
+pip install discord gtts pynacl webcolors tflearn tensorflow==1.14 tweepy
 python vegebot.py
 ```
 
