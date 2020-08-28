@@ -198,7 +198,7 @@ async def show_edit_history_command(message, args):
         await message.channel.send(response, files=files)
 
 
-@command('colour me', 'Colours your name the requested colour. You can give it hex, RGB values or the name of the colour you want')
+@command('colour me', 'Colours your name the requested colour. You can give the colour in hex, RGB values or the name of the colour you want')
 async def colour_command(message, args):
     if len(args) == 0:
         await message.channel.send('Please give me a colour. E.g. "vege colour me blue"')
@@ -210,9 +210,9 @@ async def colour_command(message, args):
         hex_colour = webcolors.normalize_hex(args)
     else:
         try:
-            hex_colour = webcolors.rgb_to_hex(map(int, args.split()))
+            hex_colour = webcolors.rgb_to_hex(map(int, args.replace(',', ' ').split()))
         except ValueError or TypeError:
-            await message.channel.send('That is not a vaild colour. E.g. "vege colour me blue"')
+            await message.channel.send('That is not a valid colour. E.g. "vege colour me blue"')
             return
 
     discord_color = discord.Color(int(hex_colour[1:], 16))
@@ -233,12 +233,12 @@ async def help_command(message, args):
     response = 'These are all the commands you can use: \n```'
     for i in commands:
         if i['show in help']:
-            response += 'vege {name:<30}{description}\n'.format(**i)
+            response += 'vege {name:<20}{description}\n'.format(**i)
     response += '```'
     await message.channel.send(response)
 
 
-@command('tick', 'Plays a random Min tick')
+@command('tick', 'Plays a random Min tick', show_in_help=False)
 async def tick_command(message, args):
     global playing
     if vc is None:
