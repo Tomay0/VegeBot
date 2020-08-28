@@ -2,6 +2,8 @@
 
 Make sure ffmpeg, python and pip are installed.
 
+Use python version 3.6 (not later)
+
 Add your discord bot's token into project root folder. Call it ```token.txt```
 
 Then open the terminal at the project root folder and do the following:
@@ -10,7 +12,7 @@ Then open the terminal at the project root folder and do the following:
 sudo pip install virtualenv
 virtualenv vegebot
 source vegebot/bin/activate
-pip install discord gtts pynacl webcolors
+pip install discord gtts pynacl webcolors tflearn tensorflow==1.14 
 python vegebot.py
 ```
 

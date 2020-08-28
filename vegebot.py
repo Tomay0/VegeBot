@@ -8,6 +8,7 @@ from sys import argv
 from os import listdir
 from os.path import isfile, join
 import webcolors
+import vege_learn
 import functools
 
 TICK_PATH = 'ticks/'
@@ -26,6 +27,7 @@ def command(name, description, show_in_help=True):
     def add_command(function):
         global commands
         commands.append({'function': function, 'name': name, 'description': description, 'show in help': show_in_help})
+
     return add_command
 
 
@@ -43,6 +45,9 @@ play_id = 0
 
 deleted_messages = []
 edited_messages = []
+
+for user in os.listdir("immitate"):
+    vege_learn.Model(user)
 
 
 @client.event
@@ -198,7 +203,8 @@ async def show_edit_history_command(message, args):
         await message.channel.send(response, files=files)
 
 
-@command('colour me', 'Colours your name the requested colour. You can give the colour in hex, RGB values or the name of the colour you want')
+@command('colour me',
+         'Colours your name the requested colour. You can give the colour in hex, RGB values or the name of the colour you want')
 async def colour_command(message, args):
     if len(args) == 0:
         await message.channel.send('Please give me a colour. E.g. "vege colour me blue"')
@@ -258,6 +264,15 @@ async def test_greeting_command(message, args):
         await message.channel.send('Can\'t. I\'m not in a voice channel')
     else:
         generate_tts(random.choice(GREETINGS).format(name=message.author.display_name))
+
+
+@command('immitate', 'Immitates a particular person on the server using machine learning', show_in_help=True)
+async def immitate_command(message, args):
+    user = args.lower()
+
+    # immitate the person named args
+    if vege_learn.has_user(user):
+        await message.channel.send(vege_learn.immitate_user(user))
 
 
 @client.event
