@@ -34,7 +34,7 @@ class Model:
             print('Loading previous char_idx')
             char_idx = pickle.load(open(self.char_idx_file, 'rb'))
 
-        X, Y, self.char_idx = \
+        self.X, self.Y, self.char_idx = \
             textfile_to_semi_redundant_sequences(self.path, seq_maxlen=self.maxlen, redun_step=3,
                                                  pre_defined_char_idx=char_idx)
 
@@ -55,11 +55,13 @@ class Model:
                                learning_rate=0.001)
 
         model = tflearn.SequenceGenerator(g, dictionary=self.char_idx,
-                                               seq_maxlen=self.maxlen,
-                                               clip_gradients=5.0,
-                                               checkpoint_path=self.name)
+                                          seq_maxlen=self.maxlen,
+                                          clip_gradients=5.0,
+                                          checkpoint_path='tflearn/' + self.name)
 
-        model.load(self.dir + "/model.tflearn")
+        # load from file
+        if os.path.exists(self.dir + "/model.tflearn.meta"):
+            model.load(self.dir + "/model.tflearn")
 
         return model
 

@@ -21,8 +21,9 @@ client = discord.Client()
 
 # Greetings
 
-with open('greetings.txt') as greetings_file:
-    GREETINGS = greetings_file.readlines()
+if os.path.exists('greetings.txt'):
+    with open('greetings.txt') as greetings_file:
+        GREETINGS = greetings_file.readlines()
 
 commands = []
 
@@ -50,20 +51,23 @@ class TwitterListener(tweepy.StreamListener):
 
 
 # Twitter API
-with open('twitter_tokens.txt', 'r') as twitter_tokens:
-    TOKENS = twitter_tokens.readlines()
+if os.path.exists('twitter_tokens.txt'):
+    with open('twitter_tokens.txt', 'r') as twitter_tokens:
+        TOKENS = twitter_tokens.readlines()
 
-auth = tweepy.OAuthHandler(TOKENS[0].strip(), TOKENS[1].strip())
-auth.set_access_token(TOKENS[2].strip(), TOKENS[3].strip())
+        auth = tweepy.OAuthHandler(TOKENS[0].strip(), TOKENS[1].strip())
+        auth.set_access_token(TOKENS[2].strip(), TOKENS[3].strip())
 
-api = tweepy.API(auth)
-streamListener = TwitterListener()
-stream = tweepy.Stream(auth=api.auth, listener=streamListener, tweet_mode='extended')
+        api = tweepy.API(auth)
+        streamListener = TwitterListener()
+        stream = tweepy.Stream(auth=api.auth, listener=streamListener, tweet_mode='extended')
 
-try:
-    stream.filter(follow=['1299295336444256256', '2943625774'], is_async=True)  # more users to follow can be added here
-except:
-    stream.disconnect()
+        try:
+            stream.filter(follow=[], is_async=True)  # more users to follow can be added here
+        except:
+            stream.disconnect()
+else:
+    print("Could not find twitter_tokens.txt. You cannot use the ")
 
 
 class PlayItem:
@@ -73,19 +77,22 @@ class PlayItem:
         self.delete_after = delete_after
 
 
-vc = None  # TODO: Allow it to enter more than one voice chat for when its being used on more than one server
+vc = None
 play_queue = []
 playing = False
 play_id = 0
 
-bot_channel_name = "shitposting-and-memes"
+with open('channel-name.txt', 'r') as file:
+    bot_channel_name = file.read()
 bot_channel = None
 
 deleted_messages = []
 edited_messages = []
 
-for user in os.listdir("imitate"):
-    vege_learn.Model(user)
+# load neural network models
+if os.path.exists('imitate'):
+    for user in os.listdir('imitate'):
+        vege_learn.Model(user)
 
 
 @client.event
@@ -301,6 +308,8 @@ async def tick_command(message, args):
 async def test_greeting_command(message, args):
     if vc is None:
         await message.channel.send('Can\'t. I\'m not in a voice channel')
+    elif len(GREETINGS) == 0:
+        await message.channel.send('No greetings loaded')
     else:
         generate_tts(random.choice(GREETINGS).format(name=message.author.display_name))
 
@@ -336,7 +345,7 @@ async def on_message(message):
 async def on_voice_state_update(member, before, after):
     global vc, playing
 
-    if after is not None and vc is not None:
+    if after is not None and vc is not None and len(GREETINGS) > 0:
         if before.channel != after.channel and after.channel == vc.channel:
             greeting = random.choice(GREETINGS)
             generate_tts(greeting.format(name=member.display_name))
