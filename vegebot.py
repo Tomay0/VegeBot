@@ -9,13 +9,17 @@ from os import listdir
 from os.path import isfile, join
 import webcolors
 import vege_learn
-import functools
+import tweepy
+
+from asgiref.sync import async_to_sync
 
 TICK_PATH = 'ticks/'
 TICK_FILES = [TICK_PATH + f for f in listdir(TICK_PATH) if isfile(join(TICK_PATH, f))]
 PREFIX = 'vege '
 
 client = discord.Client()
+
+# Greetings
 
 with open('greetings.txt') as greetings_file:
     GREETINGS = greetings_file.readlines()
@@ -31,6 +35,37 @@ def command(name, description, show_in_help=True):
     return add_command
 
 
+@async_to_sync
+async def send_channel_message(message):
+    print("sending: " + message)
+    print(bot_channel)
+    if bot_channel is not None:
+        await bot_channel.send(message)
+
+
+# listens to twitter tweets
+class TwitterListener(tweepy.StreamListener):
+    def on_status(self, status):
+        send_channel_message(status.text)
+
+
+# Twitter API
+with open('twitter_tokens.txt', 'r') as twitter_tokens:
+    TOKENS = twitter_tokens.readlines()
+
+auth = tweepy.OAuthHandler(TOKENS[0].strip(), TOKENS[1].strip())
+auth.set_access_token(TOKENS[2].strip(), TOKENS[3].strip())
+
+api = tweepy.API(auth)
+streamListener = TwitterListener()
+stream = tweepy.Stream(auth=api.auth, listener=streamListener, tweet_mode='extended')
+
+try:
+    stream.filter(follow=['1299295336444256256', '2943625774'], is_async=True)  # more users to follow can be added here
+except:
+    stream.disconnect()
+
+
 class PlayItem:
     def __init__(self, file_name, delete_after=False):
         self.filename = file_name
@@ -43,22 +78,25 @@ play_queue = []
 playing = False
 play_id = 0
 
+bot_channel_name = "shitposting-and-memes"
+bot_channel = None
+
 deleted_messages = []
 edited_messages = []
 
-for user in os.listdir("immitate"):
+for user in os.listdir("imitate"):
     vege_learn.Model(user)
 
 
 @client.event
 async def on_ready():
+    global bot_channel
     print('Bot is ready')
 
     for guild in client.guilds:
         for channel in guild.text_channels:
-            if channel.name == 'voice-chat':
-                await channel.send('OH MY GOD IM SO READY')
-                break
+            if channel.name == bot_channel_name:
+                bot_channel = channel
 
 
 def next_in_queue():
@@ -108,6 +146,7 @@ async def say_command(message, args):
         await message.channel.send('Can\'t. I\'m not in a voice channel')
     elif len(args) == 0:
         await message.channel.send('You need to give me something to say. E.g "vege say fuck you"')
+
     else:
         generate_tts(args)
 
@@ -266,13 +305,16 @@ async def test_greeting_command(message, args):
         generate_tts(random.choice(GREETINGS).format(name=message.author.display_name))
 
 
-@command('immitate', 'Immitates a particular person on the server using machine learning', show_in_help=True)
-async def immitate_command(message, args):
+@command('imitate', 'Imitates a particular person on the server using machine learning', show_in_help=True)
+async def imitate_command(message, args):
     user = args.lower()
 
-    # immitate the person named args
+    # imitate the person named args
     if vege_learn.has_user(user):
-        await message.channel.send(vege_learn.immitate_user(user))
+        await message.channel.send(vege_learn.imitate_user(user))
+    else:
+        await message.channel.send("You cannot imitate this person. Select a person from the list:",
+                                   vege_learn.models.keys())
 
 
 @client.event
