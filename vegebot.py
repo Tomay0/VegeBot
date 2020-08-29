@@ -67,7 +67,7 @@ if os.path.exists('twitter_tokens.txt') and os.path.exists('following.txt'):
                 following.append(line.strip())
 
         try:
-            stream.filter(follow=following, is_async=True)  # more users to follow can be added here
+            stream.filter(follow=following, is_async=True)
         except:
             stream.disconnect()
 else:

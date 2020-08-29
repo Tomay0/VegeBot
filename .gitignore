@@ -9,3 +9,4 @@ imitate/
 venv/
 audio/
 tflearn/
+__pycache__/
