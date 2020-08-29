@@ -39,7 +39,6 @@ def command(name, description, show_in_help=True):
 @async_to_sync
 async def send_channel_message(message):
     print("sending: " + message)
-    print(bot_channel)
     if bot_channel is not None:
         await bot_channel.send(message)
 
@@ -51,7 +50,7 @@ class TwitterListener(tweepy.StreamListener):
 
 
 # Twitter API
-if os.path.exists('twitter_tokens.txt'):
+if os.path.exists('twitter_tokens.txt') and os.path.exists('following.txt'):
     with open('twitter_tokens.txt', 'r') as twitter_tokens:
         TOKENS = twitter_tokens.readlines()
 
@@ -62,8 +61,13 @@ if os.path.exists('twitter_tokens.txt'):
         streamListener = TwitterListener()
         stream = tweepy.Stream(auth=api.auth, listener=streamListener, tweet_mode='extended')
 
+        following = []
+        with open('following.txt', 'r') as following_file:
+            for line in following_file:
+                following.append(line.strip())
+
         try:
-            stream.filter(follow=[], is_async=True)  # more users to follow can be added here
+            stream.filter(follow=following, is_async=True)  # more users to follow can be added here
         except:
             stream.disconnect()
 else:
@@ -322,8 +326,8 @@ async def imitate_command(message, args):
     if vege_learn.has_user(user):
         await message.channel.send(vege_learn.imitate_user(user))
     else:
-        await message.channel.send("You cannot imitate this person. Select a person from the list:",
-                                   vege_learn.models.keys())
+        await message.channel.send(
+            "You cannot imitate this person. Select a person from the list: " + str(list(vege_learn.models.keys())))
 
 
 @client.event

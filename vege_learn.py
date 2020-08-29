@@ -11,6 +11,18 @@ from tensorflow.python.framework import ops
 models = {}
 
 
+def clean_data(in_path, out_path):
+    with open(in_path, "r", encoding='utf-8') as file:
+        text = re.sub("[^a-zA-Z\s]+", "", file.read())
+
+        text = text.replace("\u3000", "")
+        text = re.sub(r'(\r\n.?)+', r'\r\n', text)
+
+        file_out = open(out_path, "w")
+        file_out.write(text)
+        file_out.close()
+
+
 class Model:
     def __init__(self, name):
         self.name = name
@@ -18,14 +30,7 @@ class Model:
         self.path = self.dir + "/data.txt"
         self.char_idx_file = self.dir + '/char_idx.pickle'
 
-        with open(self.dir + "/data_unicode.txt", "r", encoding='utf-8') as file:
-            text = re.sub("[^a-zA-Z\s]+", "", file.read())
-
-            text = text.replace("\u3000", "")
-
-            file_out = open(self.dir + "/data.txt", "w")
-            file_out.write(text)
-            file_out.close()
+        clean_data(self.dir + "/data_unicode.txt", self.dir + "/data.txt")
 
         self.maxlen = 25
 
