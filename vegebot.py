@@ -38,7 +38,7 @@ def command(name, description, show_in_help=True):
 
 @async_to_sync
 async def send_channel_message(message):
-    print("sending: " + message)
+    print("sending message: " + message)
     if bot_channel is not None:
         await bot_channel.send(message)
 
@@ -46,7 +46,8 @@ async def send_channel_message(message):
 # listens to twitter tweets
 class TwitterListener(tweepy.StreamListener):
     def on_status(self, status):
-        send_channel_message(status.text)
+        if 'retweeted_status' not in status._json:
+            send_channel_message(status.text)
 
 
 # Twitter API
@@ -69,6 +70,7 @@ if os.path.exists('twitter_tokens.txt') and os.path.exists('following.txt'):
         try:
             stream.filter(follow=following, is_async=True)
         except:
+            send_channel_message("OOF. I think I just lost connection to twitter.")
             stream.disconnect()
 else:
     print("Could not find twitter_tokens.txt. You cannot use the ")
