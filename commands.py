@@ -29,6 +29,7 @@ client.run(token)
 import webcolors
 import discord
 
+
 class Command:
     def __init__(self, function, name, description, show_in_help=True, aliases=None, arguments=None):
         if aliases is None:
@@ -181,7 +182,7 @@ class TextFromList:
             return args in self.texts
 
     def get_example_usages(self):
-        return self.texts[:3]
+        return self.texts  # TODO: Limit this to 3 once validation feedback is implemented
 
 
 class Nothing:
@@ -204,12 +205,23 @@ class Number:
                 num = int(args)
             else:
                 num = float(args)
-            return self.ceiling >= num >= self.floor
+
+            if self.ceiling is not None and self.ceiling >= num:
+                return False
+            if self.floor is not None and num >= self.floor:
+                return False
+
+            return True
         except ValueError:
             return False
 
     def get_example_usages(self):
-        return [str(self.ceiling)]
+        if self.ceiling is not None:
+            return [str(self.ceiling)]
+        elif self.floor is not None:
+            return [str(self.floor)]
+        else:
+            return ['15']
 
 
 class ColorHex:

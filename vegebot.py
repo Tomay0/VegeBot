@@ -312,7 +312,7 @@ async def test_greeting_command(message, args):
 @cs.add_command(
     'imitate',
     'Imitates a particular person on the server using machine learning',
-    arguments=TextFromList(vege_learn.models.keys())
+    arguments=TextFromList(list(vege_learn.models.keys()))
 )
 async def imitate_command(message, args):
     await message.channel.send(vege_learn.imitate_user(user.lower()))
