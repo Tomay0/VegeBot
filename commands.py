@@ -27,13 +27,13 @@ client.run(token)
 """
 
 import webcolors
-
+import discord
 
 class Command:
     def __init__(self, function, name, description, show_in_help=True, aliases=None, arguments=None):
         if aliases is None:
             aliases = []
-        aliases.insert(0, name)
+        aliases.insert(0, name)  # first item is its primary name
         self.names = aliases
 
         if arguments is None:
@@ -45,18 +45,6 @@ class Command:
         self.description = description
         self.show_in_help = show_in_help
 
-    def get_names(self):
-        return self.names
-
-    def get_example_usages(self):
-        return self.arguments.get_example_usages()
-
-    def check_args(self, args):
-        return self.arguments.validate(args)
-
-    async def run(self, message, args):
-        await self.function(message, args)
-
 
 class CommandSystem:
     def __init__(self, prefix, client):
@@ -67,13 +55,16 @@ class CommandSystem:
 
         self.add_command('help', 'Shows you info about all the commands', show_in_help=False)(self._help_command)
 
-    def _help_command(self, message, args):  # TODO: make this better
-        response = 'These are all the commands you can use: \n```'
+    async def _help_command(self, message, args):
+        embed = discord.Embed(
+            title='Vegebot Help',
+            description='This is a list of all the Vegebot commands.',
+            color=discord.colour.Color.purple()
+        )
         for command in self.commands:
             if command.show_in_help:
-                response += 'vege {name:<20}{description}\n'.format(name=command.names[0], description=command.description)
-        response += '```'
-        await message.channel.send(response)
+                embed.add_field(name='vege ' + command.names[0], value=command.description)
+        await message.channel.send(embed=embed)
 
     def add_command(self, *args, **argv):
         def add(function):
@@ -92,27 +83,27 @@ class CommandSystem:
         command_args_pass = False
 
         for command in self.commands:
-            for name in command.get_names():
+            for name in command.names:
                 if (text == name or text.startswith(name + ' ')) and len(name) > len(command_to_run_name):
-                    args = command.check_args(text[len(name) + 1:])
-                    if command_args_pass and not args:
+                    passes = command.arguments.validate(text[len(name) + 1:])
+                    if command_args_pass and not passes:
                         continue
                     command_to_run_name = name
                     command_to_run = command
-                    command_args_pass = args
+                    command_args_pass = passes
 
         # if a command was found now check that it has the correct arguments
         if command_to_run is None:
             await message.channel.send('That is not a command')
         elif command_args_pass:
-            await command_to_run.run(message, text[len(command_to_run_name) + 1:])
+            await command_to_run.function(message, text[len(command_to_run_name) + 1:])
         else:
             error_message = 'That is not how this command should be used. Try: \n'
-            for arg_example in command_to_run.get_example_usages():
+            for arg_example in command_to_run.arguments.get_example_usages():
                 error_message += self.prefix + command_to_run_name + ' ' + arg_example + '\n'
             await message.channel.send(error_message)
 
-# TODO: Make it so you can get feedback as it why it did not validate
+# TODO: Make it so you can get feedback about why it did not validate
 
 
 class Or:

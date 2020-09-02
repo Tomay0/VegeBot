@@ -17,14 +17,31 @@ from asgiref.sync import async_to_sync
 TICK_PATH = 'ticks/'
 TICK_FILES = [TICK_PATH + f for f in listdir(TICK_PATH) if isfile(join(TICK_PATH, f))]
 
-client = discord.Client()
-cs = CommandSystem('vege ', client)
-
 # Greetings
-
 if os.path.exists('greetings.txt'):
     with open('greetings.txt') as greetings_file:
         GREETINGS = greetings_file.readlines()
+
+client = discord.Client()
+cs = CommandSystem('vege ', client)
+
+vc = None
+play_queue = []
+playing = False
+play_id = 0
+
+with open('channel-name.txt', 'r') as file:
+    bot_channel_name = file.read()
+bot_channel = None
+
+deleted_messages = []
+edited_messages = []
+
+
+# load neural network models
+if os.path.exists('imitate'):
+    for user in os.listdir('imitate'):
+        vege_learn.Model(user)
 
 
 @async_to_sync
@@ -74,36 +91,6 @@ class PlayItem:
         self.delete_after = delete_after
 
 
-vc = None
-play_queue = []
-playing = False
-play_id = 0
-
-with open('channel-name.txt', 'r') as file:
-    bot_channel_name = file.read()
-bot_channel = None
-
-deleted_messages = []
-edited_messages = []
-
-
-# load neural network models
-if os.path.exists('imitate'):
-    for user in os.listdir('imitate'):
-        vege_learn.Model(user)
-
-
-@client.event
-async def on_ready():
-    global bot_channel
-    print('Bot is ready')
-
-    for guild in client.guilds:
-        for channel in guild.text_channels:
-            if channel.name == bot_channel_name:
-                bot_channel = channel
-
-
 def next_in_queue():
     global playing, play_queue
 
@@ -149,9 +136,8 @@ def generate_tts(text):
 async def say_command(message, args):
     if vc is None:
         await message.channel.send('Can\'t. I\'m not in a voice channel')
-    elif len(args) == 0:
-        await message.channel.send('You need to give me something to say. E.g "vege say fuck you"')
-
+    elif len(args) > 300:
+        await message.channel.send('I can\'t say that, it\'s to long')
     else:
         generate_tts(args)
 
@@ -170,16 +156,14 @@ async def join_vc_command(message, args):
         await message.channel.send('You must be in a voice channel to send this.')
         return
 
-    voice_channel = voice_state.channel
-
-    if voice_channel is None:
-        await message.channel.send('You must be in a voice channel to send this.')
-        return
-    elif vc == voice_channel:
+    if vc is not None and vc.channel == voice_state.channel:
         await message.channel.send('I\'m already in the voice channel')
         return
 
-    vc = await voice_channel.connect()
+    if vc is not None:  # In another VC
+        await vc.disconnect()
+
+    vc = await voice_state.channel.connect()
 
 
 @cs.add_command(
@@ -264,7 +248,7 @@ async def show_edit_history_command(message, args):
 @cs.add_command(
     'colour me',
     'Will change the color of your discord name whatever you request',
-    aliases=['colour', 'color me', 'color'],
+    aliases=['color me', 'colour', 'color'],
     arguments=Or(ColorHex(), CSS3Name(), RGBValues())
 )
 async def colour_command(message, args):
@@ -334,15 +318,35 @@ async def imitate_command(message, args):
     await message.channel.send(vege_learn.imitate_user(user.lower()))
 
 
+@client.event
+async def on_ready():
+    global bot_channel
+    print('Bot is ready')
+
+    for guild in client.guilds:
+        for channel in guild.text_channels:
+            if channel.name == bot_channel_name:
+                bot_channel = channel
+
 
 @client.event
 async def on_voice_state_update(member, before, after):
     global vc, playing
 
-    if after is not None and vc is not None and len(GREETINGS) > 0:
-        if before.channel != after.channel and after.channel == vc.channel:
-            greeting = random.choice(GREETINGS)
-            generate_tts(greeting.format(name=member.display_name))
+    if vc is None:  # ignore everything if not connected to VC
+        return
+    if before.channel == after.channel:  # ignore mutes and un-mutes
+        return
+
+    if after.channel == vc.channel:
+        if len(GREETINGS) > 0:
+            generate_tts(random.choice(GREETINGS).format(name=member.display_name))
+    else:
+        if len(vc.channel.members) == 1:  # leave if bot is the only one in the chat
+            await vc.disconnect()
+            vc = None
+        else:
+            generate_tts('bye {name}'.format(name=member.display_name))
 
 
 @client.event
