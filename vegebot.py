@@ -10,30 +10,21 @@ from os.path import isfile, join
 import webcolors
 import vege_learn
 import tweepy
+from commands import *
 
 from asgiref.sync import async_to_sync
 
 TICK_PATH = 'ticks/'
 TICK_FILES = [TICK_PATH + f for f in listdir(TICK_PATH) if isfile(join(TICK_PATH, f))]
-PREFIX = 'vege '
 
 client = discord.Client()
+cs = CommandSystem('vege ', client)
 
 # Greetings
 
 if os.path.exists('greetings.txt'):
     with open('greetings.txt') as greetings_file:
         GREETINGS = greetings_file.readlines()
-
-commands = []
-
-
-def command(name, description, show_in_help=True):
-    def add_command(function):
-        global commands
-        commands.append({'function': function, 'name': name, 'description': description, 'show in help': show_in_help})
-
-    return add_command
 
 
 @async_to_sync
@@ -95,6 +86,7 @@ bot_channel = None
 deleted_messages = []
 edited_messages = []
 
+
 # load neural network models
 if os.path.exists('imitate'):
     for user in os.listdir('imitate'):
@@ -153,7 +145,7 @@ def generate_tts(text):
         next_in_queue()
 
 
-@command('say', 'When the bot is in a voice channel it will use text to speech to read your message aloud')
+@cs.add_command('say', 'Will say out loud any text you give it', arguments=AnyText())
 async def say_command(message, args):
     if vc is None:
         await message.channel.send('Can\'t. I\'m not in a voice channel')
@@ -164,7 +156,11 @@ async def say_command(message, args):
         generate_tts(args)
 
 
-@command('come here', 'Will make the bot join the voice channel you are in')
+@cs.add_command(
+    'come here',
+    'Will make the bot join the voice channel you are in',
+    aliases=['come', 'join']
+)
 async def join_vc_command(message, args):
     global vc
 
@@ -186,7 +182,11 @@ async def join_vc_command(message, args):
     vc = await voice_channel.connect()
 
 
-@command('go away', 'Makes the bot leave the voice channel')
+@cs.add_command(
+    'go away',
+    'Makes the bot leave the voice channel',
+    aliases=['go', 'leave', 'fuck off']
+)
 async def leave_vc_command(message, args):
     global vc
     if vc is None:
@@ -196,7 +196,10 @@ async def leave_vc_command(message, args):
     vc = None
 
 
-@command('delete history', 'Shows all the messages that have been deleted in this channel in the last 15 minutes')
+@cs.add_command(
+    'delete history',
+    'Shows all the messages that have been deleted in this channel in the last 15 minutes'
+)
 async def show_delete_history_command(message, args):
     global deleted_messages
     deleted_messages = [m for m in deleted_messages if (datetime.utcnow() - m.created_at).seconds < 15 * 60]
@@ -227,7 +230,10 @@ async def show_delete_history_command(message, args):
         await message.channel.send(response, files=files)
 
 
-@command('edit history', 'Shows all the messages that have been edited in this channel in the last 15 minutes')
+@cs.add_command(
+    'edit history',
+    'Shows all the messages that have been edited in this channel in the last 15 minutes'
+)
 async def show_edit_history_command(message, args):
     global edited_messages
     edited_messages = [m for m in edited_messages if (datetime.utcnow() - m.created_at).seconds < 15 * 60]
@@ -255,23 +261,23 @@ async def show_edit_history_command(message, args):
         await message.channel.send(response, files=files)
 
 
-@command('colour me',
-         'Colours your name the requested colour. You can give the colour in hex, RGB values or the name of the colour you want')
+@cs.add_command(
+    'colour me',
+    'Will change the color of your discord name whatever you request',
+    aliases=['colour', 'color me', 'color'],
+    arguments=Or(ColorHex(), CSS3Name(), RGBValues())
+)
 async def colour_command(message, args):
-    if len(args) == 0:
-        await message.channel.send('Please give me a colour. E.g. "vege colour me blue"')
-        return
-
     if args.lower() in webcolors.CSS3_NAMES_TO_HEX:
         hex_colour = webcolors.name_to_hex(args)
     elif webcolors.HEX_COLOR_RE.match(args):
         hex_colour = webcolors.normalize_hex(args)
     else:
-        try:
-            hex_colour = webcolors.rgb_to_hex(map(int, args.replace(',', ' ').split()))
-        except ValueError or TypeError:
-            await message.channel.send('That is not a valid colour. E.g. "vege colour me blue"')
-            return
+        hex_colour = webcolors.rgb_to_hex(map(int, args.replace(',', ' ').split()))
+
+    # because black is not allowed
+    if hex_colour == '#000000':
+        hex_colour = '#010101'
 
     discord_color = discord.Color(int(hex_colour[1:], 16))
 
@@ -286,17 +292,12 @@ async def colour_command(message, args):
     await message.channel.send('Done')
 
 
-@command('help', 'Shows you a list of all the commands you can use and a description of how to use them')
-async def help_command(message, args):
-    response = 'These are all the commands you can use: \n```'
-    for i in commands:
-        if i['show in help']:
-            response += 'vege {name:<20}{description}\n'.format(**i)
-    response += '```'
-    await message.channel.send(response)
-
-
-@command('tick', 'Plays a random Min tick', show_in_help=False)
+@cs.add_command(
+    'tick',
+    'Plays a random Min tick',
+    aliases=['hoodle'],
+    show_in_help=False
+)
 async def tick_command(message, args):
     global playing
     if vc is None:
@@ -310,7 +311,11 @@ async def tick_command(message, args):
         next_in_queue()
 
 
-@command('test greeting', 'Greets the person who writes this in discord', show_in_help=False)
+@cs.add_command(
+    'test greeting',
+    'Greets the person who writes this in discord',
+    show_in_help=False
+)
 async def test_greeting_command(message, args):
     if vc is None:
         await message.channel.send('Can\'t. I\'m not in a voice channel')
@@ -320,31 +325,14 @@ async def test_greeting_command(message, args):
         generate_tts(random.choice(GREETINGS).format(name=message.author.display_name))
 
 
-@command('imitate', 'Imitates a particular person on the server using machine learning', show_in_help=True)
+@cs.add_command(
+    'imitate',
+    'Imitates a particular person on the server using machine learning',
+    arguments=TextFromList(vege_learn.models.keys())
+)
 async def imitate_command(message, args):
-    user = args.lower()
+    await message.channel.send(vege_learn.imitate_user(user.lower()))
 
-    # imitate the person named args
-    if vege_learn.has_user(user):
-        await message.channel.send(vege_learn.imitate_user(user))
-    else:
-        await message.channel.send(
-            "You cannot imitate this person. Select a person from the list: " + str(list(vege_learn.models.keys())))
-
-
-@client.event
-async def on_message(message):
-    text = message.content.lower()
-    if not text.startswith(PREFIX):
-        return
-    text = text[len(PREFIX):]
-
-    for i in commands:
-        if text.startswith(i['name'] + ' ') or text == i['name']:
-            await i['function'](message, message.content[len(PREFIX) + len(i['name']) + 1:])  # +1 for space
-            break
-    else:
-        await message.channel.send('That is not a command')
 
 
 @client.event
