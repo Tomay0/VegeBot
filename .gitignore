@@ -8,5 +8,5 @@ imitate/
 .idea/
 venv/
 audio/
-tflearn/
+checkpoints/
 __pycache__/

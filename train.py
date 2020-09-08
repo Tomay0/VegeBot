@@ -1,23 +1,27 @@
-import os
-
-import vege_learn
+from vege_learn import TrainingData, TrainingModel
+from os import path
 
 if __name__ == '__main__':
-    user = input("Enter name: ")
+    name = input("Enter name to train: ")
+    dir_ = 'imitate/' + name + "/"
 
-    if not os.path.exists('imitate/' + user + '/data_unicode.txt'):
-        print('Could not find data_unicode.txt file within directory imitate/' + user)
+    if not path.exists(dir_ + "data.txt"):
+        print("Could not find data.txt for that person")
+    else:
+        n_epochs = int(input("Enter number of epochs per save: "))
+        n_saves = int(input("Enter number of saves: "))
 
-    num_generations = int(input("Enter number of generations to train for: "))
+        # get training data
+        data = TrainingData(dir_ + 'data.txt', 20)
 
-    # obtain model
+        model = TrainingModel(data, dir_ + 'model.json', dir_ + 'model.h5')
 
-    model = vege_learn.Model(user)
+        for i in range(n_saves):
+            model.train(n_epochs)
 
-    # begin training
-    training = model.get_model()
+        # run a quick test
+        random_input = data.random_input()
 
-    for i in range(num_generations):
-        training.fit(model.X, model.Y, validation_set=0.1, batch_size=128, n_epoch=1, run_id="vegebot")
+        print(random_input)
 
-        training.save(model.dir + "/model.tflearn")
+        print(model.generate_output(random_input, 600))
