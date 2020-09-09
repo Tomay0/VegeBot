@@ -1,4 +1,4 @@
-from vege_learn import TrainingData, TrainingModel
+from vege_learn import TrainingData, TrainingModel, SEQ_LENGTH
 from os import path
 
 if __name__ == '__main__':
@@ -8,16 +8,14 @@ if __name__ == '__main__':
     if not path.exists(dir_ + "data.txt"):
         print("Could not find data.txt for that person")
     else:
-        n_epochs = int(input("Enter number of epochs per save: "))
-        n_saves = int(input("Enter number of saves: "))
+        n_epochs = int(input("Enter number of epochs: "))
 
         # get training data
-        data = TrainingData(dir_ + 'data.txt', 20)
+        data = TrainingData(dir_ + 'data.txt', SEQ_LENGTH)
 
         model = TrainingModel(data, dir_ + 'model.json', dir_ + 'model.h5')
 
-        for i in range(n_saves):
-            model.train(n_epochs)
+        model.train(n_epochs)
 
         # run a quick test
         random_input = data.random_input()

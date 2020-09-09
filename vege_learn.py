@@ -1,4 +1,4 @@
-import numpy
+import numpy as np
 import tensorflow as tf
 
 from os import path
@@ -11,7 +11,11 @@ from tensorflow.python.framework import ops
 
 from random import randint
 
-SEQ_LENGTH = 20
+from tensorflow.keras.optimizers import RMSprop
+from tensorflow.keras.callbacks import ReduceLROnPlateau
+from tensorflow.keras.callbacks import LambdaCallback
+
+SEQ_LENGTH = 30
 
 all_data = {}
 
@@ -47,25 +51,19 @@ class TrainingData:
         total_chars = len(self.raw_text)
         num_chars = len(self.chars)
 
-        data_x = []
-        data_y = []
-
-        for i in range(0, total_chars - seq_length, 1):
-            seq_in = self.raw_text[i: i + seq_length]
-            seq_out = self.raw_text[i + seq_length]
-
-            # append data as integers
-            data_x.append([self.char_to_int[char] for char in seq_in])
-            data_y.append(self.char_to_int[seq_out])
-
-        n_patterns = len(data_x)
+        sentences = []
+        next_chars = []
+        for i in range(0, total_chars - seq_length, 3):
+            sentences.append(self.raw_text[i: i + seq_length])
+            next_chars.append(self.raw_text[i + seq_length])
 
         # reshape the data to be more useful to keras
-
-        self.x = numpy.reshape(data_x, (n_patterns, seq_length, 1))
-        self.x = self.x / float(num_chars)
-
-        self.y = to_categorical(data_y, num_chars)
+        self.x = np.zeros((len(sentences), seq_length, num_chars), dtype=np.bool)
+        self.y = np.zeros((len(sentences), num_chars), dtype=np.bool)
+        for i, sentence in enumerate(sentences):
+            for t, char in enumerate(sentence):
+                self.x[i, t, self.char_to_int[char]] = 1
+            self.y[i, self.char_to_int[next_chars[i]]] = 1
 
     def random_input(self):
         random_index = randint(0, len(self.raw_text) - self.seq_length)
@@ -74,10 +72,9 @@ class TrainingData:
         return chars
 
     def compile_input(self, chars):
-        data_in = [self.char_to_int[char] for char in chars]
-
-        data_in = numpy.reshape(data_in, (1, self.seq_length, 1))
-        data_in = data_in / float(len(self.chars))
+        data_in = np.zeros((1, self.seq_length, len(self.chars)))
+        for t, char in enumerate(chars):
+            data_in[0, t, self.char_to_int[char]] = 1
 
         return data_in
 
@@ -99,13 +96,19 @@ class TrainingModel:
         else:
             # create the model
             self.model = Sequential()
-            self.model.add(LSTM(256, input_shape=(training_data.x.shape[1], training_data.x.shape[2])))
-            self.model.add(Dropout(0.2))
-            self.model.add(Dense(training_data.y.shape[1], activation='softmax'))
+            self.model.add(LSTM(128, input_shape=(self.training_data.seq_length, len(self.training_data.chars))))
+            self.model.add(Dense(len(self.training_data.chars), activation='softmax'))
 
-        self.model.compile(loss='categorical_crossentropy', optimizer='adam')
+        self.model.compile(loss='categorical_crossentropy', optimizer=RMSprop(lr=0.01))
 
         self.save()
+
+        filepath = "weights.hdf5"
+        checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1, save_best_only=True, mode='min')
+        reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.2,
+                                      patience=1, min_lr=0.0005)
+        save_checkpoint = LambdaCallback(on_epoch_end=lambda epoch, logs: self.save())
+        self.callbacks_list = [checkpoint, reduce_lr, save_checkpoint]
 
     def save(self):
         # save the model
@@ -115,13 +118,8 @@ class TrainingModel:
         self.model.save_weights(self.weight_file)
 
     def train(self, n_epochs):
-        filepath = "checkpoints/weights-improvement-{epoch:02d}-{loss:.4f}.hdf5"
-        checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1, save_best_only=True, mode='min')
-        callbacks_list = [checkpoint]
-
-        self.model.fit(self.training_data.x, self.training_data.y, epochs=n_epochs, batch_size=128,
-                       callbacks=callbacks_list)
-        self.save()
+        self.model.fit(self.training_data.x, self.training_data.y, epochs=n_epochs, batch_size=128, verbose=2,
+                       callbacks=self.callbacks_list)
 
     def get_output(self, chars):
         """
@@ -130,9 +128,16 @@ class TrainingModel:
         :param temperature: Higher temperature = more surprising, lower temperature = more predictable
         :return:
         """
+        temperature = 1.0
+
         data_in = self.training_data.compile_input(chars)
-        prediction = self.model.predict(data_in, verbose=0)
-        index = numpy.argmax(prediction)
+        preds = self.model.predict(data_in, verbose=0)[0]
+        preds = np.asarray(preds).astype('float64')
+        preds = np.log(preds) / temperature
+        exp_preds = np.exp(preds)
+        preds = exp_preds / np.sum(exp_preds)
+        probas = np.random.multinomial(1, preds, 1)
+        index = np.argmax(probas)
 
         result = self.training_data.chars[index]
 

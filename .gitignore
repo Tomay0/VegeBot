@@ -8,5 +8,5 @@ imitate/
 .idea/
 venv/
 audio/
-checkpoints/
+weights.hdf5
 __pycache__/
