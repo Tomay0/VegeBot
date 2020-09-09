@@ -202,13 +202,13 @@ class Number:
     def validate(self, args):
         try:
             if self.decimals_allowed:
-                num = int(args)
-            else:
                 num = float(args)
+            else:
+                num = int(args)
 
-            if self.ceiling is not None and self.ceiling >= num:
+            if self.ceiling is not None and num > self.ceiling:
                 return False
-            if self.floor is not None and num >= self.floor:
+            if self.floor is not None and self.floor > num:
                 return False
 
             return True
