@@ -333,9 +333,10 @@ async def on_ready():
 async def on_voice_state_update(member, before, after):
     global vc, playing
 
-    if vc is None:  # ignore everything if not connected to VC
-        return
-    if before.channel == after.channel:  # ignore mutes and un-mutes
+    # ignore everything if not connected to VC
+    # ignore mutes and un-mutes
+    # ignore state changes for vegebot
+    if vc is None or before.channel == after.channel or member.id == client.user.id:
         return
 
     if after.channel == vc.channel:
