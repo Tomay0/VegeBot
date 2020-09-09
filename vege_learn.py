@@ -1,11 +1,9 @@
 import numpy as np
-import tensorflow as tf
 
 from os import path
 
 from keras.models import Sequential, model_from_json
 from keras.layers import Dense, LSTM, Dropout
-from tensorflow.keras.utils import to_categorical
 from keras.callbacks import ModelCheckpoint
 from tensorflow.python.framework import ops
 
