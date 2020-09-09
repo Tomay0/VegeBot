@@ -16,8 +16,12 @@ from tensorflow.keras.callbacks import ReduceLROnPlateau
 from tensorflow.keras.callbacks import LambdaCallback
 
 SEQ_LENGTH = 30
+TEMPERATURE = 0.5
 
 all_data = {}
+
+loaded_model_name = None
+loaded_model = None
 
 
 def load_model(user):
@@ -25,11 +29,17 @@ def load_model(user):
 
 
 def imitate_user(user):
-    model = TrainingModel(all_data[user], 'imitate/' + user + '/model.json', 'imitate/' + user + '/model.h5')
+    global loaded_model, loaded_model_name
+    training_data = all_data[user]
 
-    output = model.generate_output(model.training_data.random_input(), 600)
+    if loaded_model_name != user:
+        ops.reset_default_graph()
+        loaded_model_name = user
+        loaded_model = TrainingModel(training_data, 'imitate/' + user + '/model.json',
+                                     'imitate/' + user + '/model.h5')
 
-    ops.reset_default_graph()
+    input_data = training_data.random_input()
+    output = loaded_model.generate_output(input_data, 600)
 
     return output
 
@@ -106,7 +116,7 @@ class TrainingModel:
         filepath = "weights.hdf5"
         checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1, save_best_only=True, mode='min')
         reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.2,
-                                      patience=1, min_lr=0.0005)
+                                      patience=1, min_lr=0.00001)
         save_checkpoint = LambdaCallback(on_epoch_end=lambda epoch, logs: self.save())
         self.callbacks_list = [checkpoint, reduce_lr, save_checkpoint]
 
@@ -128,12 +138,11 @@ class TrainingModel:
         :param temperature: Higher temperature = more surprising, lower temperature = more predictable
         :return:
         """
-        temperature = 1.0
 
         data_in = self.training_data.compile_input(chars)
         preds = self.model.predict(data_in, verbose=0)[0]
         preds = np.asarray(preds).astype('float64')
-        preds = np.log(preds) / temperature
+        preds = np.log(preds) / TEMPERATURE
         exp_preds = np.exp(preds)
         preds = exp_preds / np.sum(exp_preds)
         probas = np.random.multinomial(1, preds, 1)

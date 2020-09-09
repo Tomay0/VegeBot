@@ -315,7 +315,7 @@ async def test_greeting_command(message, args):
     arguments=TextFromList(list(vege_learn.all_data.keys()))
 )
 async def imitate_command(message, args):
-    await message.channel.send(vege_learn.imitate_user(user.lower()))
+    await message.channel.send(vege_learn.imitate_user(args.lower()))
 
 
 @client.event
