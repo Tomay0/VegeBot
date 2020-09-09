@@ -37,7 +37,6 @@ bot_channel = None
 deleted_messages = []
 edited_messages = []
 
-
 # load neural network models
 if os.path.exists('imitate'):
     for user in os.listdir('imitate'):
@@ -51,10 +50,12 @@ async def send_channel_message(message):
         await bot_channel.send(message)
 
 
+
+
 # listens to twitter tweets
 class TwitterListener(tweepy.StreamListener):
     def on_status(self, status):
-        if 'retweeted_status' not in status._json:
+        if 'retweeted_status' not in status._json and status._json['in_reply_to_status_id'] is None:
             send_channel_message(status.text)
 
 

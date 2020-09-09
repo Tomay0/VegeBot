@@ -2,16 +2,16 @@ import numpy as np
 
 from os import path
 
-from keras.models import Sequential, model_from_json
-from keras.layers import Dense, LSTM, Dropout
-from keras.callbacks import ModelCheckpoint
+from tensorflow.keras.models import Sequential, model_from_json
+from tensorflow.keras.layers import Dense, LSTM, Dropout
+from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow.python.framework import ops
 
 from random import randint
 
-from keras.optimizers import RMSprop
-from keras.callbacks import ReduceLROnPlateau
-from keras.callbacks import LambdaCallback
+from tensorflow.keras.optimizers import RMSprop
+from tensorflow.keras.callbacks import ReduceLROnPlateau
+from tensorflow.keras.callbacks import LambdaCallback
 
 SEQ_LENGTH = 30
 TEMPERATURE = 0.5
