@@ -2,7 +2,7 @@
 
 Make sure ffmpeg, python and pip are installed.
 
-Use python version 3.6 (not later).
+Python 3.7.7 and tensorflow==2.1.0 have been tested to work, although other combinations may work. Depending on the machine you may have to revert to an older version of tensorflow or python
 
 It is recommended you run this on linux because of the tflearn library which is not officially supported on windows.
 
@@ -12,7 +12,7 @@ Then open the terminal at the project root folder and do the following:
 sudo pip install virtualenv
 virtualenv vegebot
 source vegebot/bin/activate
-pip install discord gtts pynacl webcolors tflearn tensorflow==1.14 tweepy asgiref
+pip install discord gtts pynacl webcolors tweepy asgiref tensorflow==2.1.0
 python vegebot.py
 ```
 
@@ -44,12 +44,10 @@ This bot includes a feature where you can train a neural network to talk like a 
 
 ## Training
 
-First you need to obtain data of the person you want to imitate. The data should be contained within a text file under `imitate/{name}/data_unicode.txt`. 
-Note that the output you are imitating only includes alphabetical characters and whitespace (no symbols or numbers). \
-This file is allowed these banned characters, however, note that they will be removed in the generated `data.txt` file that will be generated.
+First you need to obtain data of the person you want to imitate. The data should be contained within a text file under `imitate/{name}/data.txt`.
 
 To train a bot: run the python script "train.py". Enter the name of the person you want to train. This should be the same as the directory under `imitate/`.
-Then you must enter how many generations you want to train for. This depends on how accurate you want your bot to be and how long the data is. To get a really good imitation you will have to train for several hours.
+You will have to enter how many epochs to train for. Ideally you want to train for several hundred.
 The time it takes for each generation depends on how complex the data is. The model is saved after each generation so you can reload it later without losing progress.
 
 When your bot is running, users can type `vege imitate {name}` to generate some output from that person.

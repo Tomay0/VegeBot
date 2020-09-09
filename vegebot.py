@@ -37,11 +37,10 @@ bot_channel = None
 deleted_messages = []
 edited_messages = []
 
-
 # load neural network models
 if os.path.exists('imitate'):
     for user in os.listdir('imitate'):
-        vege_learn.Model(user)
+        vege_learn.load_model(user)
 
 
 @async_to_sync
@@ -51,10 +50,12 @@ async def send_channel_message(message):
         await bot_channel.send(message)
 
 
+
+
 # listens to twitter tweets
 class TwitterListener(tweepy.StreamListener):
     def on_status(self, status):
-        if 'retweeted_status' not in status._json:
+        if 'retweeted_status' not in status._json and status._json['in_reply_to_status_id'] is None:
             send_channel_message(status.text)
 
 
@@ -312,10 +313,10 @@ async def test_greeting_command(message, args):
 @cs.add_command(
     'imitate',
     'Imitates a particular person on the server using machine learning',
-    arguments=TextFromList(list(vege_learn.models.keys()))
+    arguments=TextFromList(list(vege_learn.all_data.keys()))
 )
 async def imitate_command(message, args):
-    await message.channel.send(vege_learn.imitate_user(user.lower()))
+    await message.channel.send(vege_learn.imitate_user(args.lower()))
 
 
 @client.event
