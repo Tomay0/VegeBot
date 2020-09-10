@@ -170,7 +170,7 @@ async def join_vc_command(message, args):
 @cs.add_command(
     'go away',
     'Makes the bot leave the voice channel',
-    aliases=['go', 'leave', 'fuck off']
+    aliases=['go', 'leave', 'fuck off', 'alt-f4']
 )
 async def leave_vc_command(message, args):
     global vc
