@@ -8,7 +8,6 @@ from sys import argv
 from os import listdir
 from os.path import isfile, join
 import webcolors
-import vege_learn
 import tweepy
 from commands import *
 
@@ -50,8 +49,6 @@ async def send_channel_message(message):
     print("sending message: " + message)
     if bot_channel is not None:
         await bot_channel.send(message)
-
-
 
 
 # listens to twitter tweets
@@ -310,15 +307,6 @@ async def test_greeting_command(message, args):
         await message.channel.send('No greetings loaded')
     else:
         generate_tts(random.choice(GREETINGS).format(name=message.author.display_name))
-
-
-@cs.add_command(
-    'imitate',
-    'Imitates a particular person on the server using machine learning',
-    arguments=TextFromList(all_imitate)
-)
-async def imitate_command(message, args):
-    await message.channel.send(vege_learn.imitate_user(args.lower()))
 
 
 @client.event
