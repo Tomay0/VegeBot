@@ -14,21 +14,15 @@ from tensorflow.keras.callbacks import ReduceLROnPlateau
 from tensorflow.keras.callbacks import LambdaCallback
 
 SEQ_LENGTH = 30
-TEMPERATURE = 0.5
-
-all_data = {}
+TEMPERATURE = 0.4
 
 loaded_model_name = None
 loaded_model = None
 
 
-def load_model(user):
-    all_data[user] = TrainingData('imitate/' + user + '/data.txt', SEQ_LENGTH)
-
-
 def imitate_user(user):
     global loaded_model, loaded_model_name
-    training_data = all_data[user]
+    training_data = TrainingData('imitate/' + user + '/data.txt', SEQ_LENGTH)
 
     if loaded_model_name != user:
         ops.reset_default_graph()
@@ -114,7 +108,7 @@ class TrainingModel:
         filepath = "weights.hdf5"
         checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1, save_best_only=True, mode='min')
         reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.2,
-                                      patience=1, min_lr=0.00001)
+                                      patience=1, min_lr=0.0001)
         save_checkpoint = LambdaCallback(on_epoch_end=lambda epoch, logs: self.save())
         self.callbacks_list = [checkpoint, reduce_lr, save_checkpoint]
 

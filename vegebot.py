@@ -37,10 +37,12 @@ bot_channel = None
 deleted_messages = []
 edited_messages = []
 
+all_imitate = []
+
 # load neural network models
 if os.path.exists('imitate'):
     for user in os.listdir('imitate'):
-        vege_learn.load_model(user)
+        all_imitate.append(user)
 
 
 @async_to_sync
@@ -313,7 +315,7 @@ async def test_greeting_command(message, args):
 @cs.add_command(
     'imitate',
     'Imitates a particular person on the server using machine learning',
-    arguments=TextFromList(list(vege_learn.all_data.keys()))
+    arguments=TextFromList(all_imitate)
 )
 async def imitate_command(message, args):
     await message.channel.send(vege_learn.imitate_user(args.lower()))
