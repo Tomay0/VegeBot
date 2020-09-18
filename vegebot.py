@@ -7,7 +7,6 @@ from datetime import datetime
 from sys import argv
 from os import listdir
 from os.path import isfile, join
-import webcolors
 import tweepy
 from commands import *
 
@@ -36,26 +35,31 @@ bot_channel = None
 deleted_messages = []
 edited_messages = []
 
-all_imitate = []
-
-# load neural network models
-if os.path.exists('imitate'):
-    for user in os.listdir('imitate'):
-        all_imitate.append(user)
-
 
 @async_to_sync
 async def send_channel_message(message):
-    print("sending message: " + message)
-    if bot_channel is not None:
-        await bot_channel.send(message)
+    try:
+        print("sending message: " + message)
+        if bot_channel is not None:
+            await bot_channel.send(message)
+    except:
+        print("Could not send message..")
+
+
 
 
 # listens to twitter tweets
 class TwitterListener(tweepy.StreamListener):
     def on_status(self, status):
-        if 'retweeted_status' not in status._json and status._json['in_reply_to_status_id'] is None:
-            send_channel_message(status.text)
+
+        if 'retweeted_status' not in status._json and status._json['in_reply_to_status_id'] is None and status._json['user']['id_str'] in following:
+            if hasattr(status, 'extended_tweet'):
+                send_channel_message(status.extended_tweet['full_text'])
+            else:
+                send_channel_message(status.text)
+
+    def on_error(self, status_code):
+        return True
 
 
 # Twitter API
@@ -68,7 +72,7 @@ if os.path.exists('twitter_tokens.txt') and os.path.exists('following.txt'):
 
         api = tweepy.API(auth)
         streamListener = TwitterListener()
-        stream = tweepy.Stream(auth=api.auth, listener=streamListener, tweet_mode='extended')
+        stream = tweepy.Stream(auth=api.auth, listener=streamListener)
 
         following = []
         with open('following.txt', 'r') as following_file:
@@ -307,6 +311,7 @@ async def test_greeting_command(message, args):
         await message.channel.send('No greetings loaded')
     else:
         generate_tts(random.choice(GREETINGS).format(name=message.author.display_name))
+
 
 
 @client.event
