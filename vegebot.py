@@ -183,7 +183,7 @@ async def leave_vc_command(message, args):
     await vc.disconnect()
     vc = None
 
-
+'''
 @cs.add_command(
     'delete history',
     'Shows all the messages that have been deleted in this channel in the last 15 minutes'
@@ -246,7 +246,7 @@ async def show_edit_history_command(message, args):
             content=edited_message.content,
             file_urls='\n'.join(file_urls)
         )
-        await message.channel.send(response, files=files)
+        await message.channel.send(response, files=files)'''
 
 
 @cs.add_command(
@@ -345,7 +345,7 @@ async def on_voice_state_update(member, before, after):
         else:
             generate_tts('bye {name}'.format(name=member.display_name))
 
-
+'''
 @client.event
 async def on_message_delete(message):
     if message.author.id == client.user.id:
@@ -356,7 +356,7 @@ async def on_message_delete(message):
 
 @client.event
 async def on_message_edit(before, after):
-    edited_messages.append(before)
+    edited_messages.append(before)'''
 
 
 # Read bot token
