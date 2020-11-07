@@ -8,6 +8,7 @@ from sys import argv
 from os import listdir
 from os.path import isfile, join
 import tweepy
+import requests
 from commands import *
 
 from asgiref.sync import async_to_sync
@@ -46,13 +47,12 @@ async def send_channel_message(message):
         print("Could not send message..")
 
 
-
-
 # listens to twitter tweets
 class TwitterListener(tweepy.StreamListener):
     def on_status(self, status):
 
-        if 'retweeted_status' not in status._json and status._json['in_reply_to_status_id'] is None and status._json['user']['id_str'] in following:
+        if 'retweeted_status' not in status._json and status._json['in_reply_to_status_id'] is None and \
+                status._json['user']['id_str'] in following:
             if hasattr(status, 'extended_tweet'):
                 send_channel_message(status.extended_tweet['full_text'])
             else:
@@ -136,6 +136,21 @@ def generate_tts(text):
         next_in_queue()
 
 
+def send_message_to_database(message):
+    json = {
+        'id': message.id,
+        'channel_name': message.channel.name,
+        'channel_id': message.channel.id,
+        'author_name': message.author.name,
+        'author_id': message.author.id,
+        'guild_name': message.guild.name,
+        'guild_id': message.guild.id,
+        'time': str(message.created_at) + ' UTC',
+        'text': message.content
+    }
+    response = requests.post('https://ai7pkjomr4.execute-api.ap-southeast-2.amazonaws.com/dev', json=json)
+
+
 @cs.add_command('say', 'Will say out loud any text you give it', arguments=AnyText())
 async def say_command(message, args):
     if vc is None:
@@ -182,6 +197,7 @@ async def leave_vc_command(message, args):
 
     await vc.disconnect()
     vc = None
+
 
 '''
 @cs.add_command(
@@ -313,6 +329,19 @@ async def test_greeting_command(message, args):
         generate_tts(random.choice(GREETINGS).format(name=message.author.display_name))
 
 
+@cs.add_command(
+    'reset stats db',
+    'Delete entire database of messages and repopulate with history of messages',
+    show_in_help=False
+)
+async def reset_stats_db_command(message, args):
+    # TODO remove everything in current DB
+
+    for guild in client.guilds:
+        for channel in guild.text_channels:
+            async for message in channel.history():
+                send_message_to_database(message)
+
 
 @client.event
 async def on_ready():
@@ -323,6 +352,12 @@ async def on_ready():
         for channel in guild.text_channels:
             if channel.name == bot_channel_name:
                 bot_channel = channel
+
+
+@client.event
+async def on_message(message):
+    send_message_to_database(message)
+    await cs.on_message(message)
 
 
 @client.event
@@ -345,6 +380,7 @@ async def on_voice_state_update(member, before, after):
         else:
             generate_tts('bye {name}'.format(name=member.display_name))
 
+
 '''
 @client.event
 async def on_message_delete(message):
@@ -357,7 +393,6 @@ async def on_message_delete(message):
 @client.event
 async def on_message_edit(before, after):
     edited_messages.append(before)'''
-
 
 # Read bot token
 with open(argv[1] if len(argv) > 1 else 'token.txt') as token_file:
