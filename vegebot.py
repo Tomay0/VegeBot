@@ -146,7 +146,8 @@ def send_message_to_database(message):
         'guild_name': message.guild.name,
         'guild_id': message.guild.id,
         'time': str(message.created_at) + ' UTC',
-        'text': message.content
+        'text': message.content,
+        'remove': False
     }
     response = requests.post('https://ai7pkjomr4.execute-api.ap-southeast-2.amazonaws.com/dev', json=json)
 
@@ -197,72 +198,6 @@ async def leave_vc_command(message, args):
 
     await vc.disconnect()
     vc = None
-
-
-'''
-@cs.add_command(
-    'delete history',
-    'Shows all the messages that have been deleted in this channel in the last 15 minutes'
-)
-async def show_delete_history_command(message, args):
-    global deleted_messages
-    deleted_messages = [m for m in deleted_messages if (datetime.utcnow() - m.created_at).seconds < 15 * 60]
-
-    if len(deleted_messages) == 0:
-        await message.channel.send('No messages have been deleted in the last 15 minutes')
-        return
-
-    for deleted_message in deleted_messages:
-        if deleted_message.channel != message.channel:
-            continue
-
-        files = []
-        file_urls = []
-
-        for attachment in deleted_message.attachments:
-            try:
-                files.append(await attachment.to_file(use_cached=True))
-            except discord.errors.NotFound:
-                file_urls.append(attachment.url)
-
-        response = '{author}, deleted:\n {content}\n{file_urls}'
-        response = response.format(
-            author=deleted_message.author.mention,
-            content=deleted_message.content,
-            file_urls='\n'.join(file_urls)
-        )
-        await message.channel.send(response, files=files)
-
-
-@cs.add_command(
-    'edit history',
-    'Shows all the messages that have been edited in this channel in the last 15 minutes'
-)
-async def show_edit_history_command(message, args):
-    global edited_messages
-    edited_messages = [m for m in edited_messages if (datetime.utcnow() - m.created_at).seconds < 15 * 60]
-
-    if len(edited_messages) == 0:
-        await message.channel.send('No messages have been edited in the last 15 minutes')
-        return
-
-    for edited_message in edited_messages:
-        files = []
-        file_urls = []
-
-        for attachment in edited_message.attachments:
-            try:
-                files.append(await attachment.to_file(use_cached=True))
-            except discord.errors.NotFound:
-                file_urls.append(attachment.url)
-
-        response = '{author}, deleted:\n {content}\n{file_urls}'
-        response = response.format(
-            author=edited_message.author.mention,
-            content=edited_message.content,
-            file_urls='\n'.join(file_urls)
-        )
-        await message.channel.send(response, files=files)'''
 
 
 @cs.add_command(
@@ -329,27 +264,18 @@ async def test_greeting_command(message, args):
         generate_tts(random.choice(GREETINGS).format(name=message.author.display_name))
 
 
-@cs.add_command(
-    'reset stats db',
-    'Delete entire database of messages and repopulate with history of messages',
-    show_in_help=False
-)
-async def reset_stats_db_command(message, args):
-    # TODO remove everything in current DB
-
-    for guild in client.guilds:
-        for channel in guild.text_channels:
-            async for message in channel.history():
-                send_message_to_database(message)
-
-
 @client.event
 async def on_ready():
     global bot_channel
     print('Bot is ready')
+    response = requests.put('https://ai7pkjomr4.execute-api.ap-southeast-2.amazonaws.com/dev', json={'remove': True})
 
     for guild in client.guilds:
         for channel in guild.text_channels:
+
+            async for message in channel.history():
+                send_message_to_database(message)
+
             if channel.name == bot_channel_name:
                 bot_channel = channel
 
@@ -381,18 +307,19 @@ async def on_voice_state_update(member, before, after):
             generate_tts('bye {name}'.format(name=member.display_name))
 
 
-'''
 @client.event
 async def on_message_delete(message):
-    if message.author.id == client.user.id:
-        return
-
-    deleted_messages.append(message)
+    json = {
+        'id': message.id,
+        'remove': True
+    }
+    response = requests.post('https://ai7pkjomr4.execute-api.ap-southeast-2.amazonaws.com/dev', json=json)
 
 
 @client.event
 async def on_message_edit(before, after):
-    edited_messages.append(before)'''
+    send_message_to_database(after)
+
 
 # Read bot token
 with open(argv[1] if len(argv) > 1 else 'token.txt') as token_file:
