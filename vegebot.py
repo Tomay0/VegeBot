@@ -145,10 +145,11 @@ def send_message_to_database(message):
         'author_id': message.author.id,
         'guild_name': message.guild.name,
         'guild_id': message.guild.id,
-        'time': str(message.created_at) + ' UTC',
+        'time': message.created_at.isoformat(),
         'text': message.content,
         'remove': False
     }
+
     response = requests.post('https://ai7pkjomr4.execute-api.ap-southeast-2.amazonaws.com/dev', json=json)
 
 
