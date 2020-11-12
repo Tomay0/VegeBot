@@ -275,7 +275,7 @@ async def reset_stats_db(message, args):
             if perms.read_messages:
                 async for message in channel.history(limit=None):
                     print('sending message: ' + message.content)
-                    #send_message_to_database(message)
+                    send_message_to_database(message)
 
 
 @cs.add_command('get stats', 'test get stats thingy', show_in_help=False)
