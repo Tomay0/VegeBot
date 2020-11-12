@@ -267,13 +267,15 @@ async def test_greeting_command(message, args):
 
 @cs.add_command('reset stats db', 'reset message statistics database', show_in_help=False)
 async def reset_stats_db(message, args):
-    response = requests.put('https://ai7pkjomr4.execute-api.ap-southeast-2.amazonaws.com/dev', json={'remove': True})
+    #response = requests.put('https://ai7pkjomr4.execute-api.ap-southeast-2.amazonaws.com/dev', json={'remove': True})
 
     for guild in client.guilds:
         for channel in guild.text_channels:
-            async for message in channel.history(limit=None):
-                print('sending message: ' + message.content)
-                send_message_to_database(message)
+            perms = channel.permissions_for(guild.me)
+            if perms.read_messages:
+                async for message in channel.history(limit=None):
+                    print('sending message: ' + message.content)
+                    #send_message_to_database(message)
 
 
 @cs.add_command('get stats', 'test get stats thingy', show_in_help=False)
