@@ -265,18 +265,36 @@ async def test_greeting_command(message, args):
         generate_tts(random.choice(GREETINGS).format(name=message.author.display_name))
 
 
-@client.event
-async def on_ready():
-    global bot_channel
-    print('Bot is ready')
+@cs.add_command('reset stats db', 'reset message statistics database', show_in_help=False)
+async def reset_stats_db(message, args):
     response = requests.put('https://ai7pkjomr4.execute-api.ap-southeast-2.amazonaws.com/dev', json={'remove': True})
 
     for guild in client.guilds:
         for channel in guild.text_channels:
-
-            async for message in channel.history():
+            async for message in channel.history(limit=None):
+                print('sending message: ' + message.content)
                 send_message_to_database(message)
 
+
+@cs.add_command('get stats', 'test get stats thingy', show_in_help=False)
+async def get_stats(message, args):
+    json = {"type": "num_messages",
+            "time_interval": "alltime",
+            "guild": 746609150842372138,
+            "timezone": "Pacific/Auckland"}
+
+    response = requests.post('https://ai7pkjomr4.execute-api.ap-southeast-2.amazonaws.com/dev/stats', json=json)
+
+    await message.channel.send(response.content)
+
+
+@client.event
+async def on_ready():
+    global bot_channel
+    print('Bot is ready')
+
+    for guild in client.guilds:
+        for channel in guild.text_channels:
             if channel.name == bot_channel_name:
                 bot_channel = channel
 
