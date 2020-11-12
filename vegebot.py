@@ -278,18 +278,6 @@ async def reset_stats_db(message, args):
                     send_message_to_database(message)
 
 
-@cs.add_command('get stats', 'test get stats thingy', show_in_help=False)
-async def get_stats(message, args):
-    json = {"type": "num_messages",
-            "time_interval": "alltime",
-            "guild": 746609150842372138,
-            "timezone": "Pacific/Auckland"}
-
-    response = requests.post('https://ai7pkjomr4.execute-api.ap-southeast-2.amazonaws.com/dev/stats', json=json)
-
-    await message.channel.send(response.content)
-
-
 @client.event
 async def on_ready():
     global bot_channel
