@@ -3,9 +3,7 @@ import random
 import os
 from discord import FFmpegPCMAudio
 from gtts import gTTS
-from datetime import datetime
-from sys import argv
-from os import listdir
+from os import listdir, getenv
 from os.path import isfile, join
 import tweepy
 import requests
@@ -29,8 +27,6 @@ play_queue = []
 playing = False
 play_id = 0
 
-with open('channel-name.txt', 'r') as file:
-    bot_channel_name = file.read()
 bot_channel = None
 
 deleted_messages = []
@@ -285,7 +281,7 @@ async def on_ready():
 
     for guild in client.guilds:
         for channel in guild.text_channels:
-            if channel.name == bot_channel_name:
+            if channel.name == "shitposting-and-memes":  # Temporary hard coding
                 bot_channel = channel
 
 
@@ -330,6 +326,4 @@ async def on_message_edit(before, after):
     send_message_to_database(after)
 
 
-# Read bot token
-with open(argv[1] if len(argv) > 1 else 'token.txt') as token_file:
-    client.run(token_file.read())
+client.run(getenv('DISCORD_TOKEN'))

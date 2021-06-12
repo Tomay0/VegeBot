@@ -10,3 +10,4 @@ venv/
 audio/
 weights.hdf5
 __pycache__/
+docker-compose.yml

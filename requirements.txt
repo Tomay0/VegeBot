@@ -1,0 +1,6 @@
+discord~=1.0.1
+tweepy~=3.10.0
+requests~=2.24.0
+gTTS~=2.2.2
+asgiref~=3.3.4
+webcolors~=1.11.1
