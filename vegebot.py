@@ -1,11 +1,13 @@
 import random
 import os
-
+import logging
 import yaml
 from discord import FFmpegPCMAudio
 from gtts import gTTS
 from os import getenv
 from commands import *
+
+logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
 client = discord.Client()
 cs = CommandSystem('vege ', client)
@@ -22,8 +24,9 @@ try:
 
         if 'greetings' in config_data:
             greetings = config_data['greetings']
-except Exception as e:
-    print("Could not find valid config.yml")
+except FileNotFoundError as e:
+    logging.warning("Could not find valid config.yml")
+
 
 class PlayItem:
     def __init__(self, file_name, delete_after=False):
@@ -171,7 +174,7 @@ async def test_greeting_command(message, args):
 
 @client.event
 async def on_ready():
-    print('VegeBot is ready')
+    logging.info('VegeBot is ready')
 
 
 @client.event
@@ -195,11 +198,11 @@ async def on_voice_state_update(member, before, after):
             generate_tts('bye {name}'.format(name=member.display_name))
 
 
-@client.event
-async def on_message(message):
-    await cs.on_message(message)
+logging.info("Preparing VegeBot...")
 
 
-print("Preparing VegeBot...")
-
-client.run(getenv('DISCORD_TOKEN'))
+if (token := getenv('DISCORD_TOKEN')) is not None:
+    print(token)
+    client.run(token)
+else:
+    logging.critical("No discord token found")

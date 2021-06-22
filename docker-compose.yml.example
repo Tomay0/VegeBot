@@ -1,6 +1,6 @@
 version: "3.3"
 services:
   vegebot:
-    build: .
+    build: . # or "image: isaacirvine/vegebot "
     environment:
       - DISCORD_TOKEN=<discord token here>

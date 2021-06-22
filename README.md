@@ -1,24 +1,42 @@
-# Running in Docker
+# Adding vegebot to your server
+Hosting vegebot isn't free. Because of this, it's not a public bot. However, you can run your own version if you want
 
-Note you need to have a discord bot token in order for this to work.
+# Running in Docker from Docker Hub
+This is the easiest way to run your own version of vege.
+You will need Docker and a discord bot token.
+
+```bash
+docker pull isaacirvine/vegebot
+docker run -e DISCORD_TOKEN=<your token> isaacirvine/vegebot
+```
+
+Currently, no supported way to add custom greetings. In the future this should be doable through docker volumes or in the bot itself on a per discord server basis
+
+# Running in Docker from source
+You will need Docker and a discord bot token.
+1. pull for git
+2. open terminal in the root directory of this project
+3. run the following
 
 ```bash
 docker build -t vegebot .
-docker run -e DISCORD_TOKEN=YOUR_DISCORD_TOKEN vegebot
+docker run -e DISCORD_TOKEN=<your token> vegebot
 ```
+If you want to use Docker Compose, there is an example file available.
 
-You can also use a docker-compose.yml file and run 
-
-```bash
-docker-compose build
-docker-compose up
-```
-
-There is an example docker-compose.yml file included.
+# Running without Docker from source
+This should probably be possible but is not supported.
+Make sure ffmpeg, python and pip are installed.
+Then run the following:
+'''bash
+pip install -r requirements.txt
+python vegebot.py
+'''
 
 ## Config
+NOTE: For now this can only be done if you are running from source
 
-At the moment, you can alter Vegebot's greetings when people join voicechat. Vegebot will pick one of these greetings whenever someone joins voicechat.
+At the moment, you can alter Vegebot's greetings when people join voice chat. Vegebot will pick one of these greetings whenever someone joins voice chat.
 
 You can alter the config.yml file to change these greetings. You can disable the greeting function by removing the option from the config all together.
 
