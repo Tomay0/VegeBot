@@ -145,9 +145,12 @@ async def colour_command(message, args):
 
     if role_name not in [i.name for i in message.guild.roles]:
         role = await message.guild.create_role(name=role_name)
-        await message.author.add_roles(role)
     else:
         role = discord.utils.get(message.guild.roles, name=role_name)
+
+    if role not in message.author.roles:
+        await message.author.add_roles(role)
+
     await role.edit(colour=discord_color)
     await message.channel.send('Done')
 
