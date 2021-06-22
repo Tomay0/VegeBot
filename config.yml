@@ -1,4 +1,5 @@
 # Configuration
+postgrest-url: "http://localhost:3000"
 greetings:
   - "Watch out everyone it is {name}"
   - "Hello, {name}"

@@ -6,6 +6,7 @@ from discord import FFmpegPCMAudio
 from gtts import gTTS
 from os import getenv
 from commands import *
+from database import PostgRESTDatabase
 
 client = discord.Client()
 cs = CommandSystem('vege ', client)
@@ -16,14 +17,22 @@ playing = False
 play_id = 0
 
 greetings = []
+database = None
+
 try:
     with open("config.yml", "r") as f:
         config_data = yaml.load(f, Loader=yaml.FullLoader)
 
         if 'greetings' in config_data:
             greetings = config_data['greetings']
+
+        if 'postgrest-url' in config_data:
+            url = config_data['postgrest-url']
+            database = PostgRESTDatabase(url, getenv('POSTGREST_TOKEN'))
+
 except Exception as e:
     print("Could not find valid config.yml")
+
 
 class PlayItem:
     def __init__(self, file_name, delete_after=False):
@@ -198,7 +207,6 @@ async def on_voice_state_update(member, before, after):
 @client.event
 async def on_message(message):
     await cs.on_message(message)
-
 
 print("Preparing VegeBot...")
 
