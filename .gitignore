@@ -1,13 +1,4 @@
-token.txt
-twitter_tokens.txt
-greetings.txt
-following.txt
-channel-name.txt
-checkpoint
-imitate/
 .idea/
 venv/
-audio/
-weights.hdf5
 __pycache__/
 docker-compose.yml

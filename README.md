@@ -1,48 +1,26 @@
-# How to run
+# Running in Docker
 
-Make sure ffmpeg, python and pip are installed.
+Note you need to have a discord bot token in order for this to work.
 
-Then open the terminal at the project root folder and do the following:
+Note that there are problems when running this through docker. These will be fixed at some stage...
 
 ```bash
-sudo pip install virtualenv
-virtualenv vegebot
-source vegebot/bin/activate
-pip install discord gtts pynacl webcolors tweepy asgiref requests
-python vegebot.py
+docker build -t vegebot .
+docker run -e DISCORD_TOKEN=YOUR_DISCORD_TOKEN vegebot
 ```
 
-You also require some additional files in order to get the bot to run. Some are optional though.
+## Config
 
-## Additional files
+At the moment, you can alter Vegebot's greetings when people join voicechat. Vegebot will pick one of these greetings whenever someone joins voicechat.
 
-There are additional files that are required in order to run the bot.
+You can alter the config.yml file to change these greetings. You can disable the greeting function by removing the option from the config all together.
 
-#### Required:
-
-**token.txt** put the discord bot token in here.
-
-**channel-name.txt** put the name of the channel you want the bot to mainly post to here.
-
-#### Twitter integration
-
-**twitter_tokens.txt** includes 4 tokens, one per line. In this order: API key, API secret key, Access key, access secret key.
-
-**following.txt** a list of all twitter users (by their ID) to follow and post tweets from into your discord server. 1 per line.
-
-#### Greetings
-
-**greetings.txt** if Vegebot is in a voice call, they will say greetings to people as they join. A greeting is randomly selected from this file. One greeting per line. Use {name} within the file to insert the display name of the user.
-
-# Command
+# Commands
 
 ```
 vege say                           When the bot is in a voice channel it will use text to speech to read your message aloud
 vege come here                     Will make the bot join the voice channel you are in
 vege go away                       Makes the bot leave the voice channel
-vege delete history                Shows all the messages that have been deleted in this channel in the last 15 minutes
-vege edit history                  Shows all the messages that have been edited in this channel in the last 15 minutes
 vege colour me                     Colours your name the requested colour. You can give it hex, RGB values or the name of the colour you want
-vege tick                          Plays a random Min tick
 vege help                          Shows you a list of all the commands you can use and a description of how to use them
 ```

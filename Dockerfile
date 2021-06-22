@@ -12,6 +12,6 @@ COPY vegebot.py vegebot.py
 
 COPY commands.py commands.py
 
-COPY ticks ticks
+COPY config.yml config.yml
 
 CMD ["python3", "vegebot.py"]

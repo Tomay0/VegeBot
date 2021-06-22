@@ -1,23 +1,11 @@
-import discord
 import random
 import os
+
+import yaml
 from discord import FFmpegPCMAudio
 from gtts import gTTS
-from os import listdir, getenv
-from os.path import isfile, join
-import tweepy
-import requests
+from os import getenv
 from commands import *
-
-from asgiref.sync import async_to_sync
-
-TICK_PATH = 'ticks/'
-TICK_FILES = [TICK_PATH + f for f in listdir(TICK_PATH) if isfile(join(TICK_PATH, f))]
-
-# Greetings
-if os.path.exists('greetings.txt'):
-    with open('greetings.txt') as greetings_file:
-        GREETINGS = greetings_file.readlines()
 
 client = discord.Client()
 cs = CommandSystem('vege ', client)
@@ -27,61 +15,15 @@ play_queue = []
 playing = False
 play_id = 0
 
-bot_channel = None
+greetings = []
+try:
+    with open("config.yml", "r") as f:
+        config_data = yaml.load(f, Loader=yaml.FullLoader)
 
-deleted_messages = []
-edited_messages = []
-
-
-@async_to_sync
-async def send_channel_message(message):
-    try:
-        print("sending message: " + message)
-        if bot_channel is not None:
-            await bot_channel.send(message)
-    except:
-        print("Could not send message..")
-
-
-# listens to twitter tweets
-class TwitterListener(tweepy.StreamListener):
-    def on_status(self, status):
-
-        if 'retweeted_status' not in status._json and status._json['in_reply_to_status_id'] is None and \
-                status._json['user']['id_str'] in following:
-            if hasattr(status, 'extended_tweet'):
-                send_channel_message(status.extended_tweet['full_text'])
-            else:
-                send_channel_message(status.text)
-
-    def on_error(self, status_code):
-        return True
-
-
-# Twitter API
-if os.path.exists('twitter_tokens.txt') and os.path.exists('following.txt'):
-    with open('twitter_tokens.txt', 'r') as twitter_tokens:
-        TOKENS = twitter_tokens.readlines()
-
-        auth = tweepy.OAuthHandler(TOKENS[0].strip(), TOKENS[1].strip())
-        auth.set_access_token(TOKENS[2].strip(), TOKENS[3].strip())
-
-        api = tweepy.API(auth)
-        streamListener = TwitterListener()
-        stream = tweepy.Stream(auth=api.auth, listener=streamListener)
-
-        following = []
-        with open('following.txt', 'r') as following_file:
-            for line in following_file:
-                following.append(line.strip())
-
-        try:
-            stream.filter(follow=following, is_async=True)
-        except:
-            send_channel_message("OOF. I think I just lost connection to twitter.")
-            stream.disconnect()
-else:
-    print("Could not find twitter_tokens.txt. You cannot use the ")
+        if 'greetings' in config_data:
+            greetings = config_data['greetings']
+except Exception as e:
+    print("Could not find valid config.yml")
 
 
 class PlayItem:
@@ -130,23 +72,6 @@ def generate_tts(text):
     if not playing:
         playing = True
         next_in_queue()
-
-
-def send_message_to_database(message):
-    json = {
-        'id': message.id,
-        'channel_name': message.channel.name,
-        'channel_id': message.channel.id,
-        'author_name': message.author.name,
-        'author_id': message.author.id,
-        'guild_name': message.guild.name,
-        'guild_id': message.guild.id,
-        'time': message.created_at.isoformat(),
-        'text': message.content,
-        'remove': False
-    }
-
-    response = requests.post('https://ai7pkjomr4.execute-api.ap-southeast-2.amazonaws.com/dev', json=json)
 
 
 @cs.add_command('say', 'Will say out loud any text you give it', arguments=AnyText())
@@ -229,25 +154,6 @@ async def colour_command(message, args):
 
 
 @cs.add_command(
-    'tick',
-    'Plays a random Min tick',
-    aliases=['hoodle'],
-    show_in_help=False
-)
-async def tick_command(message, args):
-    global playing
-    if vc is None:
-        await message.channel.send('Can\'t. I\'m not in a voice channel')
-        return
-
-    play_queue.append(PlayItem(random.choice(TICK_FILES)))
-
-    if not playing:
-        playing = True
-        next_in_queue()
-
-
-@cs.add_command(
     'test greeting',
     'Greets the person who writes this in discord',
     show_in_help=False
@@ -255,40 +161,15 @@ async def tick_command(message, args):
 async def test_greeting_command(message, args):
     if vc is None:
         await message.channel.send('Can\'t. I\'m not in a voice channel')
-    elif len(GREETINGS) == 0:
+    elif len(greetings) == 0:
         await message.channel.send('No greetings loaded')
     else:
-        generate_tts(random.choice(GREETINGS).format(name=message.author.display_name))
-
-
-@cs.add_command('reset stats db', 'reset message statistics database', show_in_help=False)
-async def reset_stats_db(message, args):
-    response = requests.put('https://ai7pkjomr4.execute-api.ap-southeast-2.amazonaws.com/dev', json={'remove': True})
-
-    for guild in client.guilds:
-        for channel in guild.text_channels:
-            perms = channel.permissions_for(guild.me)
-            if perms.read_messages:
-                async for message in channel.history(limit=None):
-                    print('sending message: ' + message.content)
-                    send_message_to_database(message)
+        generate_tts(random.choice(greetings).format(name=message.author.display_name))
 
 
 @client.event
 async def on_ready():
-    global bot_channel
-    print('Bot is ready')
-
-    for guild in client.guilds:
-        for channel in guild.text_channels:
-            if channel.name == "shitposting-and-memes":  # Temporary hard coding
-                bot_channel = channel
-
-
-@client.event
-async def on_message(message):
-    send_message_to_database(message)
-    await cs.on_message(message)
+    print('VegeBot is ready')
 
 
 @client.event
@@ -302,8 +183,8 @@ async def on_voice_state_update(member, before, after):
         return
 
     if after.channel == vc.channel:
-        if len(GREETINGS) > 0:
-            generate_tts(random.choice(GREETINGS).format(name=member.display_name))
+        if len(greetings) > 0:
+            generate_tts(random.choice(greetings).format(name=member.display_name))
     else:
         if len(vc.channel.members) == 1:  # leave if bot is the only one in the chat
             await vc.disconnect()
@@ -313,17 +194,10 @@ async def on_voice_state_update(member, before, after):
 
 
 @client.event
-async def on_message_delete(message):
-    json = {
-        'id': message.id,
-        'remove': True
-    }
-    response = requests.post('https://ai7pkjomr4.execute-api.ap-southeast-2.amazonaws.com/dev', json=json)
+async def on_message(message):
+    await cs.on_message(message)
 
 
-@client.event
-async def on_message_edit(before, after):
-    send_message_to_database(after)
-
+print("Preparing vegebot...")
 
 client.run(getenv('DISCORD_TOKEN'))
