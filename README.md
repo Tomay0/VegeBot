@@ -2,12 +2,19 @@
 
 Note you need to have a discord bot token in order for this to work.
 
-Note that there are problems when running this through docker. These will be fixed at some stage...
-
 ```bash
 docker build -t vegebot .
 docker run -e DISCORD_TOKEN=YOUR_DISCORD_TOKEN vegebot
 ```
+
+You can also use a docker-compose.yml file and run 
+
+```bash
+docker-compose build
+docker-compose up
+```
+
+There is an example docker-compose.yml file included.
 
 ## Config
 

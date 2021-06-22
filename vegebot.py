@@ -25,7 +25,6 @@ try:
 except Exception as e:
     print("Could not find valid config.yml")
 
-
 class PlayItem:
     def __init__(self, file_name, delete_after=False):
         self.filename = file_name
@@ -198,6 +197,6 @@ async def on_message(message):
     await cs.on_message(message)
 
 
-print("Preparing vegebot...")
+print("Preparing VegeBot...")
 
 client.run(getenv('DISCORD_TOKEN'))
