@@ -1,0 +1,7 @@
+discord
+requests
+gTTS
+asgiref
+webcolors
+pyaml
+PyNaCl
