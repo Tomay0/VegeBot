@@ -1,12 +1,14 @@
 import random
 import os
-
+import logging
 import yaml
 from discord import FFmpegPCMAudio
 from gtts import gTTS
 from os import getenv
 from commands import *
 from database import PostgRESTDatabase
+
+logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
 client = discord.Client()
 cs = CommandSystem('vege ', client)
@@ -28,10 +30,19 @@ try:
 
         if 'postgrest-url' in config_data:
             url = config_data['postgrest-url']
-            database = PostgRESTDatabase(url, getenv('POSTGREST_TOKEN'))
+            if (p_token := getenv('POSTGREST_TOKEN')) is not None:
+                database = PostgRESTDatabase(url, p_token)
 
-except Exception as e:
-    print("Could not find valid config.yml")
+        if database is None:
+            logging.warning("Database token and url not provided.")
+            logging.warning("Include your PostgREST Authorization token as the environment variable: POSTGREST_TOKEN")
+            logging.warning("Add the database URL to the config.yml under the key postgrest-url")
+except FileNotFoundError:
+    logging.warning("Could not find config.yml")
+    logging.warning("Some features may not work properly")
+except yaml.scanner.ScannerError:
+    logging.warning("config.yml has invalid syntax")
+    logging.warning("Some features may not work properly")
 
 
 class PlayItem:
@@ -180,7 +191,7 @@ async def test_greeting_command(message, args):
 
 @client.event
 async def on_ready():
-    print('VegeBot is ready')
+    logging.info('VegeBot is ready')
 
 
 @client.event
@@ -208,6 +219,10 @@ async def on_voice_state_update(member, before, after):
 async def on_message(message):
     await cs.on_message(message)
 
-print("Preparing VegeBot...")
 
-client.run(getenv('DISCORD_TOKEN'))
+logging.info("Preparing VegeBot...")
+
+if (token := getenv('DISCORD_TOKEN')) is not None:
+    client.run(token)
+else:
+    logging.critical("No discord token found")

@@ -51,16 +51,15 @@ class PostgRESTDatabase:
         return json.loads(response.text)
 
     def add_message(self, message):
-        pass
-
-        '''
         headers = {'Authorization': f'Bearer {self.token}', 'Content-Type': 'application/json'}
-        content = {'user_id': user_id, 'user_name': user_name}
 
-        response = requests.post(f'{self.url}/discordusers', headers=headers, json=content)
+        content = {'message_id': message.id, 'guild_id': message.guild.id, 'channel_id': message.channel.id,
+                   'user_id': message.user.id, 'message': message.content, 'message_timestamp': message.created_at}
+
+        response = requests.post(f'{self.url}/discordmessages', headers=headers, json=content)
 
         # TODO remove these test prints
         if response.status_code != 201:
-            print(f"Error {response.status_code} adding user:\n{response.text}")
+            print(f"Error {response.status_code} adding message:\n{response.content}")
         else:
-            print(f"Added user: {user_name}")'''
+            print(f"Added message: {message.content}")

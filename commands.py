@@ -52,6 +52,8 @@ class CommandSystem:
         self.prefix = prefix
         self.commands = []
 
+        client.event(self.on_message)
+
         self.add_command('help', 'Shows you info about all the commands', show_in_help=False)(self._help_command)
 
     async def _help_command(self, message, args):
