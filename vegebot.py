@@ -194,16 +194,22 @@ async def test_greeting_command(message, args):
 )
 async def reset_stats_db_command(message, args):
     if database is not None:
+        await message.channel.send('Clearing the current database...')
         database.clear_database()
 
+        await message.channel.send('Sending all discord data to the database...')
+        all_messages = []
         for guild in client.guilds:
             for channel in guild.text_channels:
                 perms = channel.permissions_for(guild.me)
                 if perms.read_messages:
-                    async for message in channel.history(limit=None):
-                        database.add_message(message)
 
-        await message.channel.send('Database reset')
+                    async for m in channel.history(limit=None):
+                        all_messages.append(m)
+
+        database.add_messages(all_messages)
+
+        await message.channel.send('Database reset!')
     else:
         await message.channel.send('No database loaded')
 
