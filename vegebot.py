@@ -28,8 +28,7 @@ try:
         if 'greetings' in config_data:
             greetings = config_data['greetings']
 
-        if 'postgrest-url' in config_data:
-            url = config_data['postgrest-url']
+        if (url := getenv('POSTGREST_URL')) is not None:
             if (p_token := getenv('POSTGREST_TOKEN')) is not None:
                 database = PostgRESTDatabase(url, p_token)
 
