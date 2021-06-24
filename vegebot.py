@@ -188,6 +188,27 @@ async def test_greeting_command(message, args):
     else:
         generate_tts(random.choice(greetings).format(name=message.author.display_name))
 
+@cs.add_command(
+    'reset stats db',
+    'Reset all records in the database',
+    show_in_help=False
+)
+async def reset_stats_db_command(message, args):
+    if database is not None:
+        database.clear_database()
+
+        for guild in client.guilds:
+            for channel in guild.text_channels:
+                perms = channel.permissions_for(guild.me)
+                if perms.read_messages:
+                    async for message in channel.history(limit=None):
+                        database.add_message(message)
+
+        await message.channel.send('Database reset')
+    else:
+        await message.channel.send('No database loaded')
+
+
 
 @client.event
 async def on_ready():
