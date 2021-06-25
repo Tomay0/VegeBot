@@ -103,7 +103,7 @@ GRANT ALL ON api.DiscordMessages to vege;
 GRANT ALL ON api.DiscordChannels to vege;
 GRANT ALL ON api.DiscordUsers to vege;
 GRANT ALL ON api.DiscordGuilds to vege;
-GRANT ALL ON api.add_messages to vege;
+GRANT ALL ON FUNCTION api.add_message to vege;
 GRANT ALL ON api.FullView to vege;
 GRANT ALL ON api.UserMessagesTotal to vege;
 GRANT ALL ON api.UserMessagesByGuild to vege;
