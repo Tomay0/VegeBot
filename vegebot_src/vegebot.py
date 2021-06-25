@@ -10,7 +10,7 @@ from database import PostgRESTDatabase
 from asgiref.sync import async_to_sync
 from time import sleep
 
-sleep(5)  # hacky way to make sure bot starts after database
+sleep(10)  # hacky way to make sure bot starts after database
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
@@ -276,7 +276,9 @@ async def vege_stats_command(message, args):
 async def on_ready():
     logging.info('Resetting database..')
     # Reset the database
+    print("starting reset")
     await reset_database()
+    print("finished reset")
 
     logging.info('VegeBot is ready')
     print("Vege is ready")
@@ -305,10 +307,9 @@ async def on_voice_state_update(member, before, after):
 
 @client.event
 async def on_message(message):
+    await cs.on_message(message)
     if database is not None:
         database.add_message(message)
-
-    await cs.on_message(message)
 
 
 @client.event

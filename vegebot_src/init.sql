@@ -82,20 +82,21 @@ $$;
 Create Views for viewing the data in the database
 */
 
-CREATE VIEW api.FullView AS SELECT * FROM api.DiscordMessages NATURAL JOIN api.DiscordGuilds NATURAL JOIN api.DiscordChannels NATURAL JOIN api.DiscordUsers;
+CREATE OR REPLACE VIEW api.FullView AS SELECT * FROM api.DiscordMessages NATURAL JOIN api.DiscordGuilds NATURAL JOIN api.DiscordChannels NATURAL JOIN api.DiscordUsers;
 
-CREATE VIEW api.UserMessagesTotal AS SELECT User_Id, User_Name, Count(*) FROM api.DiscordMessages NATURAL JOIN api.DiscordUsers GROUP BY User_Id, User_Name;
+CREATE OR REPLACE VIEW api.UserMessagesTotal AS SELECT User_Id, User_Name, Count(*) FROM api.DiscordMessages NATURAL JOIN api.DiscordUsers GROUP BY User_Id, User_Name;
 
-CREATE VIEW api.UserMessagesByGuild AS SELECT User_Id, User_Name, Guild_Id, Guild_Name, Count(*) FROM api.DiscordMessages NATURAL JOIN api.DiscordUsers NATURAL JOIN api.DiscordGuilds GROUP BY User_Id, User_Name, Guild_Id, Guild_Name;
+CREATE OR REPLACE VIEW api.UserMessagesByGuild AS SELECT User_Id, User_Name, Guild_Id, Guild_Name, Count(*) FROM api.DiscordMessages NATURAL JOIN api.DiscordUsers NATURAL JOIN api.DiscordGuilds GROUP BY User_Id, User_Name, Guild_Id, Guild_Name;
 
-CREATE VIEW api.UserMessagesByChannel AS SELECT User_Id, User_Name, Guild_Id, Guild_Name, Channel_Id, Channel_Name, Count(*) FROM api.FullView GROUP BY User_Id, User_Name, Guild_Id, Guild_Name, Channel_Id, Channel_Name;
+CREATE OR REPLACE VIEW api.UserMessagesByChannel AS SELECT User_Id, User_Name, Guild_Id, Guild_Name, Channel_Id, Channel_Name, Count(*) FROM api.FullView GROUP BY User_Id, User_Name, Guild_Id, Guild_Name, Channel_Id, Channel_Name;
 
-CREATE VIEW api.MessagesByChannel AS SELECT Channel_Id, Channel_Name, Guild_Id, Guild_Name, Count(*) FROM api.DiscordMessages NATURAL JOIN api.DiscordChannels NATURAL JOIN api.DiscordGuilds GROUP BY Channel_Id, Channel_Name, Guild_Id, Guild_Name;
+CREATE OR REPLACE VIEW api.MessagesByChannel AS SELECT Channel_Id, Channel_Name, Guild_Id, Guild_Name, Count(*) FROM api.DiscordMessages NATURAL JOIN api.DiscordChannels NATURAL JOIN api.DiscordGuilds GROUP BY Channel_Id, Channel_Name, Guild_Id, Guild_Name;
 
 
 /*
 Roles and permissions
 */
+DROP ROLE IF EXISTS nologin;
 CREATE ROLE vege nologin;
 
 GRANT USAGE ON SCHEMA api TO vege;
