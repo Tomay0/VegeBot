@@ -1,0 +1,45 @@
+version: "3.3"
+services:
+  vegebot:
+    build: .
+    environment:
+      DISCORD_TOKEN: ${DISCORD_BOT_TOKEN}
+      POSTGREST_TOKEN: ${POSTGREST_TOKEN}
+      POSTGREST_URL: postgrest
+      POSTGRES_URL: postgres
+      POSTGRES_DB: vege_db
+      POSTGRES_USER: auth
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    depends_on:
+      - postgrest
+  postgrest:
+    image: postgrest/postgrest
+    environment:
+      PGRST_JWT_SECRET: ${POSTGREST_JWT_SECRET}
+      PGRST_DB_URI: postgres://auth:${POSTGRES_PASSWORD}@postgres:5432/vege_db
+      PGRST_DB_SCHEMA: api
+      PGRST_DB_ANON_ROLE: anon
+    depends_on:
+      - postgres
+  postgres:
+    image: postgres
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-d", "postgres", "-U", "auth" ]
+      timeout: 45s
+      interval: 10s
+      retries: 10
+    environment:
+      POSTGRES_DB: vege_db
+      POSTGRES_USER: auth
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - "./pgdata:/var/lib/postgresql/data"
+  admin:
+    image: adminer
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    ports:
+      - 8080:8080
