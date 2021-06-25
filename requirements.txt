@@ -5,3 +5,4 @@ asgiref
 webcolors
 pyaml
 PyNaCl
+psycopg2
