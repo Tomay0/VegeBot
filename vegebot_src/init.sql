@@ -2,7 +2,7 @@
 Create Tables
 */
 
-CREATE SCHEMA api;
+CREATE SCHEMA IF NOT EXISTS api;
 
 CREATE TABLE IF NOT EXISTS api.DiscordGuilds (
 	Guild_Id BIGINT,
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS api.DiscordMessages (
 /*
 Create Function for adding data to the database
 */
-CREATE FUNCTION api.add_message(c_id bigint, c_name text, g_id bigint, g_name text, u_id bigint, u_name text, msg_id text, msg text,  msg_timestamp text)
+CREATE OR REPLACE FUNCTION api.add_message(c_id bigint, c_name text, g_id bigint, g_name text, u_id bigint, u_name text, msg_id text, msg text,  msg_timestamp text)
 RETURNS VOID
 LANGUAGE PLPGSQL
 AS
