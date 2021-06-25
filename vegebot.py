@@ -21,27 +21,27 @@ play_id = 0
 greetings = []
 database = None
 
+# Load greetings from config
 try:
     with open("config.yml", "r") as f:
         config_data = yaml.load(f, Loader=yaml.FullLoader)
 
         if 'greetings' in config_data:
             greetings = config_data['greetings']
-
-        if (url := getenv('POSTGREST_URL')) is not None:
-            if (p_token := getenv('POSTGREST_TOKEN')) is not None:
-                database = PostgRESTDatabase(url, p_token)
-
-        if database is None:
-            logging.warning("Database token and url not provided.")
-            logging.warning("Include your PostgREST Authorization token as the environment variable: POSTGREST_TOKEN")
-            logging.warning("Add the database URL to the config.yml under the key postgrest-url")
 except FileNotFoundError:
     logging.warning("Could not find config.yml")
     logging.warning("Some features may not work properly")
 except yaml.scanner.ScannerError:
     logging.warning("config.yml has invalid syntax")
     logging.warning("Some features may not work properly")
+
+# Load database
+if (url := getenv('POSTGREST_URL')) is not None and (p_token := getenv('POSTGREST_TOKEN')) is not None:
+    database = PostgRESTDatabase(url, p_token)
+else:
+    logging.warning("Database token and url not provided.")
+    logging.warning("Include your PostgREST Authorization token as the environment variable: POSTGREST_TOKEN")
+    logging.warning("Include your PostgREST URL as the environment variable: POSTGREST_URL")
 
 
 class PlayItem:
@@ -187,6 +187,7 @@ async def test_greeting_command(message, args):
     else:
         generate_tts(random.choice(greetings).format(name=message.author.display_name))
 
+
 @cs.add_command(
     'reset stats db',
     'Reset all records in the database',
@@ -212,7 +213,6 @@ async def reset_stats_db_command(message, args):
         await message.channel.send('Database reset!')
     else:
         await message.channel.send('No database loaded')
-
 
 
 @client.event
@@ -243,7 +243,22 @@ async def on_voice_state_update(member, before, after):
 
 @client.event
 async def on_message(message):
+    if database is not None:
+        database.add_message(message)
+
     await cs.on_message(message)
+
+
+@client.event
+async def on_message_delete(message):
+    if database is not None:
+        database.delete_message(message)
+
+
+@client.event
+async def on_message_edit(_, after):
+    if database is not None:
+        database.add_message(after)
 
 
 logging.info("Preparing VegeBot...")
