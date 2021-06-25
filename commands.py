@@ -52,8 +52,6 @@ class CommandSystem:
         self.prefix = prefix
         self.commands = []
 
-        client.event(self.on_message)
-
         self.add_command('help', 'Shows you info about all the commands', show_in_help=False)(self._help_command)
 
     async def _help_command(self, message, args):
@@ -70,6 +68,7 @@ class CommandSystem:
     def add_command(self, *args, **argv):
         def add(function):
             self.commands.append(Command(function, *args, **argv))
+
         return add
 
     async def on_message(self, message):
@@ -104,6 +103,7 @@ class CommandSystem:
                 error_message += self.prefix + command_to_run_name + ' ' + arg_example + '\n'
             await message.channel.send(error_message)
 
+
 # TODO: Make it so you can get feedback about why it did not validate
 
 
@@ -121,6 +121,7 @@ class Or:
         example_usages = []
         for arg_type in self.types:
             example_usages.extend(arg_type.get_example_usages())
+
         return example_usages
 
 
@@ -133,7 +134,7 @@ class All:
         if len(split_args) != len(self.types):
             return False
 
-        for i in range(len(split_args)):
+        for i in range(len(self.types)):
             if not self.types[i].validate(split_args[i]):
                 return False
         return True
@@ -148,6 +149,33 @@ class All:
         examples = []
         for i in x[0]:
             examples += [i + ' ' + j for j in All._combine_examples(x[1:])]
+        return examples
+
+
+class AtLeast:
+    def __init__(self, *types):
+        self.types = types
+
+    def validate(self, args):
+        split_args = args.strip().replace(',', ' ').split()
+        if len(split_args) < len(self.types):
+            return False
+
+        for i in range(len(self.types)):
+            if not self.types[i].validate(split_args[i]):
+                return False
+        return True
+
+    def get_example_usages(self):
+        return AtLeast._combine_examples([arg_type.get_example_usages() for arg_type in self.types])
+
+    @staticmethod
+    def _combine_examples(x):
+        if len(x) == 1:
+            return x[0]
+        examples = []
+        for i in x[0]:
+            examples += [i + ' ' + j for j in AtLeast._combine_examples(x[1:])]
         return examples
 
 
@@ -252,4 +280,3 @@ class RGBValues:
 
     def get_example_usages(self):
         return self.validator.get_example_usages()
-

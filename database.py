@@ -12,10 +12,10 @@ class PostgRESTDatabase:
         self.url = url
         self.token = token
 
-    def get_messages(self):
+    def get_data(self, query):
         headers = {'Authorization': f'Bearer {self.token}'}
 
-        response = requests.get(f'{self.url}/discordmessages', headers=headers)
+        response = requests.get(f'{self.url}/{query}', headers=headers)
 
         return json.loads(response.text)
 

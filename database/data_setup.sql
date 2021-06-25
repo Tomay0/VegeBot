@@ -1,6 +1,5 @@
 /*
-This sets up the whole database in PostgreSQL.
-Note that the authentication password needs to be updated here
+Create Tables
 */
 
 CREATE SCHEMA api;
@@ -36,6 +35,9 @@ CREATE TABLE IF NOT EXISTS api.DiscordMessages (
 	CONSTRAINT User_Id FOREIGN KEY(User_Id) REFERENCES api.DiscordUsers(User_Id)
 );
 
+/*
+Create Function for adding data to the database
+*/
 CREATE FUNCTION api.add_message(c_id bigint, c_name text, g_id bigint, g_name text, u_id bigint, u_name text, msg_id text, msg text,  msg_timestamp text)
 RETURNS VOID
 LANGUAGE PLPGSQL
@@ -75,6 +77,25 @@ END IF;
 END;
 $$;
 
+
+/*
+Create Views for viewing the data in the database
+*/
+
+CREATE VIEW api.FullView AS SELECT * FROM api.DiscordMessages NATURAL JOIN api.DiscordGuilds NATURAL JOIN api.DiscordChannels NATURAL JOIN api.DiscordUsers;
+
+CREATE VIEW api.UserMessagesTotal AS SELECT User_Id, User_Name, Count(*) FROM api.DiscordMessages NATURAL JOIN api.DiscordUsers GROUP BY User_Id, User_Name;
+
+CREATE VIEW api.UserMessagesByGuild AS SELECT User_Id, User_Name, Guild_Id, Guild_Name, Count(*) FROM api.DiscordMessages NATURAL JOIN api.DiscordUsers NATURAL JOIN api.DiscordGuilds GROUP BY User_Id, User_Name, Guild_Id, Guild_Name;
+
+CREATE VIEW api.UserMessagesByChannel AS SELECT User_Id, User_Name, Guild_Id, Guild_Name, Channel_Id, Channel_Name, Count(*) FROM api.FullView GROUP BY User_Id, User_Name, Guild_Id, Guild_Name, Channel_Id, Channel_Name;
+
+CREATE VIEW api.MessagesByChannel AS SELECT Channel_Id, Channel_Name, Guild_Id, Guild_Name, Count(*) FROM api.DiscordMessages NATURAL JOIN api.DiscordChannels NATURAL JOIN api.DiscordGuilds GROUP BY Channel_Id, Channel_Name, Guild_Id, Guild_Name;
+
+
+/*
+Roles and permissions
+*/
 CREATE ROLE vege nologin;
 
 GRANT USAGE ON SCHEMA api TO vege;
@@ -83,5 +104,10 @@ GRANT ALL ON api.DiscordChannels to vege;
 GRANT ALL ON api.DiscordUsers to vege;
 GRANT ALL ON api.DiscordGuilds to vege;
 GRANT ALL ON api.add_messages to vege;
+GRANT ALL ON api.FullView to vege;
+GRANT ALL ON api.UserMessagesTotal to vege;
+GRANT ALL ON api.UserMessagesByGuild to vege;
+GRANT ALL ON api.UserMessagesByChannel to vege;
+GRANT ALL ON api.MessagesByChannel to vege;
 
 GRANT vege TO auth;

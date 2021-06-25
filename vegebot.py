@@ -119,9 +119,9 @@ async def reset_database():
 @cs.add_command('say', 'Will say out loud any text you give it', arguments=AnyText())
 async def say_command(message, args):
     if vc is None:
-        await message.channel.send('Can\'t. I\'m not in a voice channel')
+        await message.channel.send('I must be in a voicechat if you want me to say that.')
     elif len(args) > 300:
-        await message.channel.send('I can\'t say that, it\'s to long')
+        await message.channel.send('There is a character limit of 300 for TTS messages here')
     else:
         generate_tts(args)
 
@@ -203,13 +203,53 @@ async def colour_command(message, args):
     'Greets the person who writes this in discord',
     show_in_help=False
 )
-async def test_greeting_command(message, args):
+async def test_greeting_command(message, _):
     if vc is None:
         await message.channel.send('Can\'t. I\'m not in a voice channel')
     elif len(greetings) == 0:
         await message.channel.send('No greetings loaded')
     else:
         generate_tts(random.choice(greetings).format(name=message.author.display_name))
+
+
+@cs.add_command(
+    'stats',
+    'Display stats about the server',
+    show_in_help=True,
+    arguments=AtLeast(TextFromList(['usermessages', 'channelmessages']))
+)
+async def vege_stats_command(message, args):
+    args_split = args.split(" ")
+
+    if len(args_split) < 1:
+        return
+
+    stat_type = args_split[0].lower().replace("_", "")
+    scope_type = "guild" if len(args_split) == 1 else args_split[1]
+
+    if database is None:
+        await message.channel.send('Sorry, I could not connect to the database at this time...')
+
+    if stat_type == 'usermessages':
+        if scope_type == 'channel':
+            user_messages_json = database.get_data(
+                f"usermessagesbychannel?guild_id=eq.{message.guild.id}&channel_id=eq.{message.channel.id}")
+            category = message.channel.name
+        else:
+            user_messages_json = database.get_data(f"usermessagesbyguild?guild_id=eq.{message.guild.id}")
+            category = message.guild.name
+
+        user_messages_dict = {x['user_id']: {'name': x['user_name'], 'count': x['count']} for x in user_messages_json}
+        users_sorted = sorted([x['user_id'] for x in user_messages_json], key=lambda x: -user_messages_dict[x]['count'])
+
+        user_list_string = f'Top Users for {category}:\n'
+
+        for i, u_id in enumerate(users_sorted):
+            user_list_string += f'#{i + 1}: {user_messages_dict[u_id]["name"]} ({user_messages_dict[u_id]["count"]})\n'
+
+        await message.channel.send(user_list_string)
+    elif stat_type == 'channelmessages':
+        print('CHANNEL MESSAGE DATA')
 
 
 @client.event
@@ -219,6 +259,7 @@ async def on_ready():
     await reset_database()
 
     logging.info('VegeBot is ready')
+    print("Vege is ready")
 
 
 @client.event
