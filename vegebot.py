@@ -232,13 +232,16 @@ async def vege_stats_command(message, args):
 
     if stat_type == 'usermessages':
         if scope_type == 'channel':
+            # Obtain JSON representation of the number of messages users have in this channel
             user_messages_json = database.get_data(
                 f"usermessagesbychannel?guild_id=eq.{message.guild.id}&channel_id=eq.{message.channel.id}")
             category = message.channel.name
         else:
+            # Obtain JSON representation of the number of messages this user have in this server
             user_messages_json = database.get_data(f"usermessagesbyguild?guild_id=eq.{message.guild.id}")
             category = message.guild.name
 
+        # Send sorted list of top users
         user_messages_dict = {x['user_id']: {'name': x['user_name'], 'count': x['count']} for x in user_messages_json}
         users_sorted = sorted([x['user_id'] for x in user_messages_json], key=lambda x: -user_messages_dict[x]['count'])
 
@@ -249,7 +252,21 @@ async def vege_stats_command(message, args):
 
         await message.channel.send(user_list_string)
     elif stat_type == 'channelmessages':
-        print('CHANNEL MESSAGE DATA')
+        # Send sorted list of top channels
+        channel_messages_json = database.get_data(f"messagesbychannel?guild_id=eq.{message.guild.id}")
+
+        channel_messages_dict = {x['channel_id']: {'name': x['channel_name'], 'count': x['count']} for x in
+                                 channel_messages_json}
+        channels_sorted = sorted([x['channel_id'] for x in channel_messages_json],
+                                 key=lambda x: -channel_messages_dict[x]['count'])
+
+        channel_list_string = f'Top Channels for {message.guild.name}:\n'
+
+        for i, c_id in enumerate(channels_sorted):
+            channel_list_string += f'#{i + 1}: {channel_messages_dict[c_id]["name"]}' \
+                                   f' ({channel_messages_dict[c_id]["count"]})\n'
+
+        await message.channel.send(channel_list_string)
 
 
 @client.event
