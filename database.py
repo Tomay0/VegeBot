@@ -12,45 +12,6 @@ class PostgRESTDatabase:
         self.url = url
         self.token = token
 
-    def add_user(self, user_id, user_name):
-        headers = {'Authorization': f'Bearer {self.token}', 'Content-Type': 'application/json'}
-
-        # Check if it exists
-        content = {'user_id': user_id}
-
-        response = requests.get(f'{self.url}/discordusers', headers=headers, json=content)
-
-        if response.status_code != 200:
-            print(f"Error {response.status_code} adding user:\n{response.text}")
-            return
-
-        json_response = json.loads(response.text)
-
-        print(json_response)
-
-        if len(json_response) == 0:
-            content = {'user_id': user_id, 'user_name': user_name}
-            # Add new entry
-            response = requests.post(f'{self.url}/discordusers', headers=headers, json=content)
-
-            # TODO remove these test prints
-            if response.status_code != 201:
-                print(f"Error {response.status_code} adding user:\n{response.text}")
-            else:
-                print(f"Added user: {user_name}")
-        elif json_response[0]['user_name'] != user_name:
-            content = {'user_name': user_name}
-
-            response = requests.patch(f'{self.url}/discordusers?user_id=eq.{user_id}', headers=headers, json=content)
-
-            # TODO remove these test prints
-            if response.status_code != 201:
-                print(f"Error {response.status_code} updating user:\n{response.text}")
-            else:
-                print(f"Added user: {user_name}")
-        else:
-            print("Already added")
-
     def get_messages(self):
         headers = {'Authorization': f'Bearer {self.token}'}
 
@@ -93,7 +54,7 @@ class PostgRESTDatabase:
         response = requests.post(f'{self.url}/rpc/add_message', headers=headers, json=content)
 
         if response.status_code != 200:
-            logging.error(f"Error {response.status_code} adding message:\n{response.text}")
+            logging.error(f"Error {response.status_code} adding messages:\n{response.text}")
 
     def add_message(self, message):
         headers = {'Authorization': f'Bearer {self.token}', 'Content-Type': 'application/json'}

@@ -7,6 +7,7 @@ from gtts import gTTS
 from os import getenv
 from commands import *
 from database import PostgRESTDatabase
+from asgiref.sync import async_to_sync
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
@@ -90,6 +91,29 @@ def generate_tts(text):
     if not playing:
         playing = True
         next_in_queue()
+
+
+async def reset_database():
+    global database
+
+    if database is None:
+        logging.warning('Database was not loaded, so could not be reset')
+        return
+
+    database.clear_database()
+
+    all_messages = []
+    for guild in client.guilds:
+        for channel in guild.text_channels:
+            perms = channel.permissions_for(guild.me)
+            if perms.read_messages:
+
+                async for m in channel.history(limit=None):
+                    all_messages.append(m)
+
+    database.add_messages(all_messages)
+
+    logging.info("Database Reset")
 
 
 @cs.add_command('say', 'Will say out loud any text you give it', arguments=AnyText())
@@ -188,35 +212,12 @@ async def test_greeting_command(message, args):
         generate_tts(random.choice(greetings).format(name=message.author.display_name))
 
 
-@cs.add_command(
-    'reset stats db',
-    'Reset all records in the database',
-    show_in_help=False
-)
-async def reset_stats_db_command(message, args):
-    if database is not None:
-        await message.channel.send('Clearing the current database...')
-        database.clear_database()
-
-        await message.channel.send('Sending all discord data to the database...')
-        all_messages = []
-        for guild in client.guilds:
-            for channel in guild.text_channels:
-                perms = channel.permissions_for(guild.me)
-                if perms.read_messages:
-
-                    async for m in channel.history(limit=None):
-                        all_messages.append(m)
-
-        database.add_messages(all_messages)
-
-        await message.channel.send('Database reset!')
-    else:
-        await message.channel.send('No database loaded')
-
-
 @client.event
 async def on_ready():
+    logging.info('Resetting database..')
+    # Reset the database
+    await reset_database()
+
     logging.info('VegeBot is ready')
 
 
