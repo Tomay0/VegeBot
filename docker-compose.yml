@@ -2,8 +2,6 @@ version: "3.3"
 services:
   vegebot:
     build: .
-    volumes:
-      - ./src:/vegebot
     environment:
       DISCORD_TOKEN: ${DISCORD_BOT_TOKEN}
       POSTGREST_TOKEN: ${POSTGREST_TOKEN}
