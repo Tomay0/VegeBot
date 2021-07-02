@@ -88,12 +88,13 @@ CREATE OR REPLACE VIEW api.FullView AS SELECT * FROM api.DiscordMessages NATURAL
 
 CREATE OR REPLACE VIEW api.UserMessagesTotal AS SELECT User_Id, User_Name, Count(*) FROM api.DiscordMessages NATURAL JOIN api.DiscordUsers GROUP BY User_Id, User_Name;
 
-CREATE OR REPLACE VIEW api.UserMessagesByGuild AS SELECT User_Id, User_Name, Guild_Id, Guild_Name, Count(*) FROM api.DiscordMessages NATURAL JOIN api.DiscordUsers NATURAL JOIN api.DiscordGuilds GROUP BY User_Id, User_Name, Guild_Id, Guild_Name;
+CREATE OR REPLACE VIEW api.UserMessagesByGuild AS SELECT User_Id, User_Name, Guild_Id, Count(*) FROM api.DiscordMessages NATURAL JOIN api.DiscordUsers GROUP BY User_Id, User_Name, Guild_Id;
 
-CREATE OR REPLACE VIEW api.UserMessagesByChannel AS SELECT User_Id, User_Name, Guild_Id, Guild_Name, Channel_Id, Channel_Name, Count(*) FROM api.FullView GROUP BY User_Id, User_Name, Guild_Id, Guild_Name, Channel_Id, Channel_Name;
+CREATE OR REPLACE VIEW api.UserMessagesByChannel AS SELECT User_Id, User_Name, Guild_Id, Channel_Id, Count(*) FROM api.DiscordMessages NATURAL JOIN api.DiscordUsers GROUP BY User_Id, User_Name, Guild_Id, Channel_Id;
 
-CREATE OR REPLACE VIEW api.MessagesByChannel AS SELECT Channel_Id, Channel_Name, Guild_Id, Guild_Name, Count(*) FROM api.DiscordMessages NATURAL JOIN api.DiscordChannels NATURAL JOIN api.DiscordGuilds GROUP BY Channel_Id, Channel_Name, Guild_Id, Guild_Name;
+CREATE OR REPLACE VIEW api.MessagesByChannel AS SELECT Channel_Id, Channel_Name, Guild_Id, Count(*) FROM api.DiscordMessages NATURAL JOIN api.DiscordChannels GROUP BY Channel_Id, Channel_Name, Guild_Id;
 
+CREATE OR REPLACE VIEW api.UserMessagesByDay AS SELECT User_Id, User_Name, Guild_Id, DATE_TRUNC('day', Message_Timestamp) AS Message_Day, Count(*) FROM api.DiscordMessages NATURAL JOIN api.DiscordUsers GROUP BY User_Id, User_Name, Guild_Id, Message_Day ORDER BY Message_Day;
 
 /*
 Roles and permissions
