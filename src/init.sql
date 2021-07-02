@@ -96,6 +96,8 @@ CREATE OR REPLACE VIEW api.MessagesByChannel AS SELECT Channel_Id, Channel_Name,
 
 CREATE OR REPLACE VIEW api.UserMessagesByDay AS SELECT User_Id, User_Name, Guild_Id, DATE_TRUNC('day', Message_Timestamp) AS Message_Day, Count(*) FROM api.DiscordMessages NATURAL JOIN api.DiscordUsers GROUP BY User_Id, User_Name, Guild_Id, Message_Day ORDER BY Message_Day;
 
+CREATE OR REPLACE VIEW api.UserMessagesByMonth AS SELECT User_Id, User_Name, Guild_Id, DATE_TRUNC('month', Message_Timestamp) AS Message_Month, Count(*) FROM api.DiscordMessages NATURAL JOIN api.DiscordUsers GROUP BY User_Id, User_Name, Guild_Id, Message_Month ORDER BY Message_Month;
+
 /*
 Roles and permissions
 */
