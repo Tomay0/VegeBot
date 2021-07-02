@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS api.DiscordGuilds (
 
 CREATE TABLE IF NOT EXISTS api.DiscordChannels (
 	Channel_Id BIGINT,
+	Guild_Id BIGINT,
 	Channel_Name VARCHAR(100),
 	PRIMARY KEY(Channel_Id)
 );
@@ -57,7 +58,7 @@ ELSIF g_name <> g_name2 THEN
 END IF;
 SELECT Channel_Name INTO c_name2 FROM api.DiscordChannels WHERE Channel_Id = CAST(c_id AS BIGINT);
 IF NOT FOUND THEN
-    INSERT INTO api.DiscordChannels VALUES (CAST(c_id AS BIGINT), c_name);
+    INSERT INTO api.DiscordChannels VALUES (CAST(c_id AS BIGINT), CAST(g_id AS BIGINT), c_name);
 ELSIF c_name <> c_name2 THEN
     UPDATE api.DiscordChannels SET Channel_Name = c_name WHERE Channel_Id = CAST(c_id AS BIGINT);
 END IF;

@@ -6,6 +6,7 @@ services:
       DISCORD_TOKEN: ${DISCORD_BOT_TOKEN}
       POSTGREST_TOKEN: ${POSTGREST_TOKEN}
       POSTGREST_URL: http://postgrest:3000
+      WEBAPP_URL: ${WEBAPP_URL}
       POSTGRES_HOST: postgres
       POSTGRES_DB: vege_db
       POSTGRES_USER: auth
