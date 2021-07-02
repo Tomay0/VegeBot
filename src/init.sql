@@ -115,5 +115,7 @@ GRANT ALL ON api.UserMessagesTotal to vege;
 GRANT ALL ON api.UserMessagesByGuild to vege;
 GRANT ALL ON api.UserMessagesByChannel to vege;
 GRANT ALL ON api.MessagesByChannel to vege;
+GRANT ALL ON api.UserMessagesByDay to vege;
+GRANT ALL ON api.UserMessagesByMonth to vege;
 
 GRANT vege TO auth;
