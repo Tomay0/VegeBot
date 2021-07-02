@@ -2,6 +2,7 @@
 Create Tables
 */
 
+DROP SCHEMA IF EXISTS api CASCADE;
 CREATE SCHEMA IF NOT EXISTS api;
 
 CREATE TABLE IF NOT EXISTS api.DiscordGuilds (
@@ -38,7 +39,7 @@ CREATE TABLE IF NOT EXISTS api.DiscordMessages (
 /*
 Create Function for adding data to the database
 */
-CREATE OR REPLACE FUNCTION api.add_message(c_id bigint, c_name text, g_id bigint, g_name text, u_id bigint, u_name text, msg_id text, msg text,  msg_timestamp text)
+CREATE OR REPLACE FUNCTION api.add_message(c_id text, c_name text, g_id text, g_name text, u_id text, u_name text, msg_id text, msg text,  msg_timestamp text)
 RETURNS VOID
 LANGUAGE PLPGSQL
 AS
@@ -48,29 +49,29 @@ g_name2 TEXT;
 c_name2 TEXT;
 u_name2 TEXT;
 BEGIN
-SELECT Guild_Name INTO g_name2 FROM api.DiscordGuilds WHERE Guild_Id = g_id;
+SELECT Guild_Name INTO g_name2 FROM api.DiscordGuilds WHERE Guild_Id = CAST(g_id AS BIGINT);
 IF NOT FOUND THEN
-    INSERT INTO api.DiscordGuilds VALUES (g_id, g_name);
+    INSERT INTO api.DiscordGuilds VALUES (CAST(g_id AS BIGINT), g_name);
 ELSIF g_name <> g_name2 THEN
-    UPDATE api.DiscordGuilds SET Guild_Name = g_name WHERE Guild_Id = g_id;
+    UPDATE api.DiscordGuilds SET Guild_Name = g_name WHERE Guild_Id = CAST(g_id AS BIGINT);
 END IF;
-SELECT Channel_Name INTO c_name2 FROM api.DiscordChannels WHERE Channel_Id = c_id;
+SELECT Channel_Name INTO c_name2 FROM api.DiscordChannels WHERE Channel_Id = CAST(c_id AS BIGINT);
 IF NOT FOUND THEN
-    INSERT INTO api.DiscordChannels VALUES (c_id, c_name);
+    INSERT INTO api.DiscordChannels VALUES (CAST(c_id AS BIGINT), c_name);
 ELSIF c_name <> c_name2 THEN
-    UPDATE api.DiscordChannels SET Channel_Name = c_name WHERE Channel_Id = c_id;
+    UPDATE api.DiscordChannels SET Channel_Name = c_name WHERE Channel_Id = CAST(c_id AS BIGINT);
 END IF;
-SELECT User_Name INTO u_name2 FROM api.DiscordUsers WHERE User_Id = u_id;
+SELECT User_Name INTO u_name2 FROM api.DiscordUsers WHERE User_Id = CAST(u_id AS BIGINT);
 IF NOT FOUND THEN
-    INSERT INTO api.DiscordUsers VALUES (u_id, u_name);
+    INSERT INTO api.DiscordUsers VALUES (CAST(u_id AS BIGINT), u_name);
 ELSIF u_name <> u_name2 THEN
-    UPDATE api.DiscordUsers SET User_Name = u_name WHERE User_Id = u_id;
+    UPDATE api.DiscordUsers SET User_Name = u_name WHERE User_Id = CAST(u_id AS BIGINT);
 END IF;
 
 IF EXISTS (SELECT * FROM api.DiscordMessages WHERE Message_Id = CAST (msg_id AS BIGINT)) THEN
-    UPDATE api.DiscordMessages SET Guild_Id = g_id, Channel_Id = c_id, User_Id = u_id, Message = msg, Message_Timestamp = TO_TIMESTAMP(msg_timestamp, 'YYYY-MM-DD HH24:MI:SS') WHERE Message_Id = CAST (msg_id AS BIGINT);
+    UPDATE api.DiscordMessages SET Guild_Id = CAST(g_id AS BIGINT), Channel_Id = CAST(c_id AS BIGINT), User_Id = CAST(u_id AS BIGINT), Message = msg, Message_Timestamp = TO_TIMESTAMP(msg_timestamp, 'YYYY-MM-DD HH24:MI:SS') WHERE Message_Id = CAST (msg_id AS BIGINT);
 ELSE
-    INSERT INTO api.DiscordMessages VALUES (CAST(msg_id AS BIGINT), g_id, c_id, u_id, msg, TO_TIMESTAMP(msg_timestamp, 'YYYY-MM-DD HH24:MI:SS'));
+    INSERT INTO api.DiscordMessages VALUES (CAST(msg_id AS BIGINT), CAST(g_id AS BIGINT), CAST(c_id AS BIGINT), CAST(u_id AS BIGINT), msg, TO_TIMESTAMP(msg_timestamp, 'YYYY-MM-DD HH24:MI:SS'));
 
 END IF;
 

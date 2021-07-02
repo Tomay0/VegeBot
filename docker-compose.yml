@@ -2,6 +2,8 @@ version: "3.3"
 services:
   vegebot:
     build: .
+    volumes:
+      - ./src:/vegebot
     environment:
       DISCORD_TOKEN: ${DISCORD_BOT_TOKEN}
       POSTGREST_TOKEN: ${POSTGREST_TOKEN}
@@ -10,22 +12,26 @@ services:
       POSTGRES_DB: vege_db
       POSTGRES_USER: auth
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    command: ["python3", "vegebot.py"]
     depends_on:
       - postgrest
   postgrest:
     image: postgrest/postgrest
+    ports:
+      - 3000:3000
     environment:
       PGRST_JWT_SECRET: ${POSTGREST_JWT_SECRET}
       PGRST_DB_URI: postgres://auth:${POSTGRES_PASSWORD}@postgres:5432/vege_db
       PGRST_DB_SCHEMA: api
       PGRST_DB_ANON_ROLE: anon
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
   postgres:
     image: postgres
     healthcheck:
       test: [ "CMD", "pg_isready", "-q", "-d", "postgres", "-U", "auth" ]
-      timeout: 45s
+      timeout: 10s
       interval: 10s
       retries: 10
     environment:

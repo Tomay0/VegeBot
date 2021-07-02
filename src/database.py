@@ -1,9 +1,6 @@
 import requests
 import json
 import logging
-import setup_database
-
-setup_database.setup()
 
 
 def clean_message(message):
