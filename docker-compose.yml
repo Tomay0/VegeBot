@@ -33,7 +33,7 @@ services:
       POSTGRES_USER: auth
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - "./pgdata:/var/lib/postgresql/data"
+      - pgdata:/var/lib/postgresql/data
   admin:
     image: adminer
     restart: always
@@ -43,3 +43,5 @@ services:
       ADMINER_DEFAULT_SERVER: postgres
     ports:
       - 8080:8080
+volumes:
+  pgdata:

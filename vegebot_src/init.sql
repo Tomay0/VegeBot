@@ -96,6 +96,7 @@ CREATE OR REPLACE VIEW api.MessagesByChannel AS SELECT Channel_Id, Channel_Name,
 /*
 Roles and permissions
 */
+DROP OWNED BY vege;
 DROP ROLE IF EXISTS vege;
 CREATE ROLE vege nologin;
 
