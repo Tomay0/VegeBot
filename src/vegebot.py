@@ -8,7 +8,6 @@ from os import getenv
 from commands import *
 from database import PostgRESTDatabase
 from asgiref.sync import async_to_sync
-from time import sleep
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 

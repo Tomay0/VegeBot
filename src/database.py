@@ -1,9 +1,70 @@
 import requests
 import json
 import logging
-import setup_database
+import psycopg2
+from os import getenv
+from time import sleep
 
-setup_database.setup()
+
+def wait_for_postgrest(num_tries=20):
+    n = 0
+    while True:
+        try:
+            return requests.head(getenv('POSTGREST_URL'))
+        except requests.exceptions.ConnectionError:
+            sleep(1)
+            n += 1
+            if n >= num_tries:
+                raise RuntimeError("Could not connect to PostgREST")
+
+
+def get_database(num_tries=20):
+    n = 0
+    while True:
+        try:
+            return psycopg2.connect(
+                host=getenv('POSTGRES_HOST'),
+                database=getenv('POSTGRES_DB'),
+                user=getenv('POSTGRES_USER'),
+                password=getenv('POSTGRES_PASSWORD'))
+        except psycopg2.errors.OperationalError:
+            sleep(1)
+            n += 1
+            if n >= num_tries:
+                raise RuntimeError("Could not connect to Postgres")
+
+
+async def reset_database(client, database):
+    if database is None:
+        logging.warning('Database config is not set, so could not be loaded')
+        return
+
+    conn = get_database()
+
+    cur = conn.cursor()
+    with open('init.sql') as sql_init_file:
+        cur.execute(sql_init_file.read())
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    wait_for_postgrest()
+    database.clear_database()
+
+    all_messages = []
+    for guild in client.guilds:
+        for channel in guild.text_channels:
+            perms = channel.permissions_for(guild.me)
+            if perms.read_messages:
+
+                async for m in channel.history(limit=None):
+                    all_messages.append(m)
+
+    database.add_messages(all_messages)
+
+    logging.info("Database Reset")
+
+    return database
 
 
 def clean_message(message):
